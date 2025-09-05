@@ -8,9 +8,8 @@ extract-datasets:
 	@for zipfile in $(DATASETS_DIR)/*.zip; do \
 		if [ -f "$$zipfile" ]; then \
 			filename=$$(basename "$$zipfile" .zip); \
-			echo "Extraindo $$zipfile para $(EXTRACTED_DIR)/$$filename/"; \
-			mkdir -p "$(EXTRACTED_DIR)/$$filename"; \
-			unzip -q "$$zipfile" -d "$(EXTRACTED_DIR)/$$filename/"; \
+			echo "Extraindo $$zipfile para $(EXTRACTED_DIR)/"; \
+			unzip -q "$$zipfile" -d "$(EXTRACTED_DIR)/"; \
 		fi; \
 	done
 	@echo "Extração concluída!"
