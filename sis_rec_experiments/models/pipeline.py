@@ -7,15 +7,23 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from ..loaders.builder import create_loader
+from ..preprocessing import ColdStartFilter, StatsAnalyzer
 from .evaluation.evaluator import ModelEvaluator
 from .model_factory import ModelFactory
 
 
 class ModelPipeline:
-    def __init__(self, output_dir: str = "sis_rec_experiments/models/results"):
+    def __init__(self, output_dir: str = "sis_rec_experiments/models/results", 
+                 apply_preprocessing: bool = False, preprocessing_params: Dict = None):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.evaluator = ModelEvaluator()
+        self.apply_preprocessing = apply_preprocessing
+        
+        if preprocessing_params is None:
+            preprocessing_params = {"min_user_ratings": 20, "min_item_ratings": 10}
+        self.cold_start_filter = ColdStartFilter(**preprocessing_params)
+        self.stats_analyzer = StatsAnalyzer()
 
     def run_experiment(self, dataset_name: str, model_name: str, model_params: Dict = None) -> Dict:
         if model_params is None:
@@ -23,6 +31,22 @@ class ModelPipeline:
 
         loader = create_loader(dataset_name)
         loader.load_ratings()
+        
+        original_df = loader.ratings_df.copy()
+        
+        if self.apply_preprocessing:
+            filtered_df, filtering_report = self.cold_start_filter.filter_dataset(loader.ratings_df)
+            loader.ratings_df = filtered_df
+            
+            print(self.stats_analyzer.generate_comparison_report(filtering_report))
+            
+            preprocessing_plot_path = self.output_dir / f"{dataset_name}_preprocessing_analysis.png"
+            self.stats_analyzer.plot_filtering_impact(
+                original_df, filtered_df, filtering_report, str(preprocessing_plot_path)
+            )
+        else:
+            filtering_report = None
+        
         surprise_dataset = loader.to_surprise_dataset()
 
         model = ModelFactory.create_model(model_name, **model_params)
@@ -30,6 +54,10 @@ class ModelPipeline:
 
         results["dataset_name"] = dataset_name
         results["experiment_timestamp"] = datetime.now().isoformat()
+        results["preprocessing_applied"] = self.apply_preprocessing
+        
+        if filtering_report:
+            results["preprocessing_report"] = filtering_report
 
         self._save_results(results)
         self._generate_plots(results)
