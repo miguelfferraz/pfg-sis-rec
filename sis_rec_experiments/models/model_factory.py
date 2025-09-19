@@ -1,12 +1,14 @@
 from typing import Dict, Type
 
 from .algorithms.baseline_models import BaselineOnlyModel
+from .algorithms.matrix_factorization import SVDModel
 from .base_model import BaseModel
 
 
 class ModelFactory:
     _models: Dict[str, Type[BaseModel]] = {
         "baseline": BaselineOnlyModel,
+        "svd": SVDModel,
     }
 
     @classmethod
