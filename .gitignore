@@ -1,4 +1,4 @@
 .venv/*
 *.csv
-datasets/extracted/*
+sis_rec_experiments/datasets/extracted/*
 **/__pycache__/*
