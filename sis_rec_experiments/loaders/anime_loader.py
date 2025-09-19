@@ -10,6 +10,7 @@ class AnimeLoader(BaseDatasetLoader):
     This dataset contains ratings of anime from MyAnimeList.
     Includes explicit ratings and access history.
     """
+
     DEFAULT_RATING_SCALE = (1.0, 10.0)
 
     def __init__(self, dataset_path: str):

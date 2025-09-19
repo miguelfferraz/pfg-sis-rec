@@ -8,7 +8,7 @@ from surprise import Dataset, Reader
 
 class BaseDatasetLoader(ABC):
     DEFAULT_RATING_SCALE: tuple = None
-    
+
     def __init__(self, dataset_path: str):
         self.dataset_path = Path(dataset_path)
         self.ratings_df: Optional[pd.DataFrame] = None
@@ -35,29 +35,27 @@ class BaseDatasetLoader(ABC):
     def to_surprise_dataset(self, rating_scale=None, reader=None) -> Dataset:
         """
         Convert the dataset to the Surprise format.
-        
+
         Args:
             rating_scale: Tuple (min, max) If None, uses the default rating scale.
             reader: surprise.Reader instance, if None, creates an automatic one.
         """
         self._validate_ratings_loaded()
-        
+
         if self._surprise_dataset is not None:
             return self._surprise_dataset
-        
+
         if rating_scale is None:
             if self.DEFAULT_RATING_SCALE is None:
-                raise NotImplementedError(
-                    f"The class {self.__class__.__name__} must define DEFAULT_RATING_SCALE"
-                )
+                raise NotImplementedError(f"The class {self.__class__.__name__} must define DEFAULT_RATING_SCALE")
             rating_scale = self.DEFAULT_RATING_SCALE
-        
+
         if reader is None:
             reader = Reader(rating_scale=rating_scale)
-        
+
         surprise_data = self.ratings_df[["user_id", "item_id", "rating"]].copy()
         self._surprise_dataset = Dataset.load_from_df(surprise_data, reader)
-        
+
         return self._surprise_dataset
 
     def get_basic_stats(self) -> Dict[str, Any]:

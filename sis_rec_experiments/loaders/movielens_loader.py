@@ -10,6 +10,7 @@ class MovieLensLoader(BaseDatasetLoader):
     This dataset contains movie ratings from MovieLens 100k.
     Classic dataset with 100,000 ratings from 943 users on 1682 movies.
     """
+
     DEFAULT_RATING_SCALE = (1.0, 5.0)
 
     def load_ratings(self) -> pd.DataFrame:
@@ -19,11 +20,11 @@ class MovieLensLoader(BaseDatasetLoader):
             raise FileNotFoundError(f"Rating file not found: {ratings_file}")
 
         self.ratings_df = pd.read_csv(
-            ratings_file, 
-            sep="\t", 
-            header=None, 
+            ratings_file,
+            sep="\t",
+            header=None,
             names=["user_id", "item_id", "rating", "timestamp"],
-            dtype={"user_id": "int32", "item_id": "int32", "rating": "float32", "timestamp": "int64"}
+            dtype={"user_id": "int32", "item_id": "int32", "rating": "float32", "timestamp": "int64"},
         )
 
         return self.ratings_df
@@ -34,17 +35,11 @@ class MovieLensLoader(BaseDatasetLoader):
         if movies_file.exists():
             try:
                 self.metadata_df = pd.read_csv(
-                    movies_file,
-                    sep="|",
-                    header=None,
-                    encoding="latin-1",
-                    on_bad_lines="skip"
+                    movies_file, sep="|", header=None, encoding="latin-1", on_bad_lines="skip"
                 )
-                
+
                 if len(self.metadata_df.columns) >= 2:
-                    self.metadata_df = self.metadata_df.rename(
-                        columns={0: "item_id", 1: "title", 2: "release_date"}
-                    )
+                    self.metadata_df = self.metadata_df.rename(columns={0: "item_id", 1: "title", 2: "release_date"})
             except Exception as e:
                 print(f"Error loading metadata: {e}")
                 self.metadata_df = pd.DataFrame()
@@ -63,7 +58,7 @@ class MovieLensLoader(BaseDatasetLoader):
             **basic_stats,
             "dataset_name": "MovieLens 100k",
             "dataset_type": "Movie Ratings",
-            "domain": "Movies/Entertainment", 
+            "domain": "Movies/Entertainment",
             "has_metadata": self.metadata_df is not None and not self.metadata_df.empty,
             "rating_scale": (1.0, 5.0),
             "data_format": "TAB (Tab-separated)",

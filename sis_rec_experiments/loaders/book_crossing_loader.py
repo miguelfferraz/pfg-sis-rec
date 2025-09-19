@@ -10,6 +10,7 @@ class BookCrossingLoader(BaseDatasetLoader):
     This dataset contains ratings of books from the Book-Crossing community.
     Includes explicit ratings, access history and demographic information of users.
     """
+
     DEFAULT_RATING_SCALE = (1.0, 10.0)
 
     def __init__(self, dataset_path: str):
@@ -66,7 +67,7 @@ class BookCrossingLoader(BaseDatasetLoader):
             try:
                 self.users_info_df = pd.read_csv(
                     users_file,
-                    sep=r"\s+", # regex for multiple spaces
+                    sep=r"\s+",  # regex for multiple spaces
                     encoding="utf-8",
                     on_bad_lines="skip",
                     engine="python",

@@ -11,6 +11,7 @@ class AmazonMusicLoader(BaseDatasetLoader):
     This dataset contains reviews of musical products from Amazon,
     including ratings and metadata of the products.
     """
+
     DEFAULT_RATING_SCALE = (1.0, 5.0)
 
     def load_ratings(self) -> pd.DataFrame:
@@ -72,4 +73,3 @@ class AmazonMusicLoader(BaseDatasetLoader):
         }
 
         return info
-
