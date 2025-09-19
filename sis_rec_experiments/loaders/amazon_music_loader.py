@@ -8,15 +8,16 @@ from sis_rec_experiments.loaders.base_loader import BaseDatasetLoader
 
 class AmazonMusicLoader(BaseDatasetLoader):
     """
-    Este dataset contém reviews de produtos musicais da Amazon,
-    incluindo ratings e metadados dos produtos.
+    This dataset contains reviews of musical products from Amazon,
+    including ratings and metadata of the products.
     """
+    DEFAULT_RATING_SCALE = (1.0, 5.0)
 
     def load_ratings(self) -> pd.DataFrame:
         json_file = self.dataset_path / "Digital_Music_5.json"
 
         if not json_file.exists():
-            raise FileNotFoundError(f"Arquivo de ratings não encontrado: {json_file}")
+            raise FileNotFoundError(f"Rating file not found: {json_file}")
 
         ratings_data = []
         with open(json_file, "r", encoding="utf-8") as f:
@@ -33,7 +34,7 @@ class AmazonMusicLoader(BaseDatasetLoader):
                         }
                     )
                 except (json.JSONDecodeError, KeyError) as e:
-                    print(f"Erro ao processar linha: {e}")
+                    print(f"Error processing line: {e}")
                     continue
 
         self.ratings_df = pd.DataFrame(ratings_data)
@@ -44,12 +45,12 @@ class AmazonMusicLoader(BaseDatasetLoader):
         csv_file = self.dataset_path / "amazon_music_metadata.csv"
 
         if not csv_file.exists():
-            raise FileNotFoundError(f"Arquivo de metadados não encontrado: {csv_file}")
+            raise FileNotFoundError(f"Metadata file not found: {csv_file}")
 
         try:
             self.metadata_df = pd.read_csv(csv_file)
         except Exception as e:
-            print(f"Erro ao carregar metadados: {e}")
+            print(f"Error loading metadata: {e}")
             self.metadata_df = pd.DataFrame()
 
         return self.metadata_df
@@ -71,3 +72,4 @@ class AmazonMusicLoader(BaseDatasetLoader):
         }
 
         return info
+

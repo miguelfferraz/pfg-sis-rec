@@ -7,9 +7,10 @@ from sis_rec_experiments.loaders.base_loader import BaseDatasetLoader
 
 class AnimeLoader(BaseDatasetLoader):
     """
-    Este dataset contém ratings de animes do MyAnimeList.
-    Inclui ratings explícitos e histórico de acessos.
+    This dataset contains ratings of anime from MyAnimeList.
+    Includes explicit ratings and access history.
     """
+    DEFAULT_RATING_SCALE = (1.0, 10.0)
 
     def __init__(self, dataset_path: str):
         super().__init__(dataset_path)
@@ -19,7 +20,7 @@ class AnimeLoader(BaseDatasetLoader):
         ratings_file = self.dataset_path / "anime_ratings.dat"
 
         if not ratings_file.exists():
-            raise FileNotFoundError(f"Arquivo de ratings não encontrado: {ratings_file}")
+            raise FileNotFoundError(f"Rating file not found: {ratings_file}")
 
         self.ratings_df = pd.read_csv(
             ratings_file, sep="\t", header=0, dtype={"User_ID": "int32", "Anime_ID": "int32", "Feedback": "float32"}
@@ -38,7 +39,7 @@ class AnimeLoader(BaseDatasetLoader):
             try:
                 self.metadata_df = pd.read_csv(info_file, sep="\t")
             except Exception as e:
-                print(f"Erro ao carregar metadados: {e}")
+                print(f"Error loading metadata: {e}")
                 self.metadata_df = pd.DataFrame()
         else:
             self.metadata_df = pd.DataFrame()
@@ -49,7 +50,7 @@ class AnimeLoader(BaseDatasetLoader):
         history_file = self.dataset_path / "anime_history.dat"
 
         if not history_file.exists():
-            raise FileNotFoundError(f"Arquivo de histórico não encontrado: {history_file}")
+            raise FileNotFoundError(f"History file not found: {history_file}")
 
         self.history_df = pd.read_csv(
             history_file, sep="\t", header=0, dtype={"User_ID": "int32", "Anime_ID": "int32", "Feedback": "int8"}

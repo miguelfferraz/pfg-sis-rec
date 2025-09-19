@@ -7,9 +7,10 @@ from sis_rec_experiments.loaders.base_loader import BaseDatasetLoader
 
 class BookCrossingLoader(BaseDatasetLoader):
     """
-    Este dataset contém ratings de livros do Book-Crossing community.
-    Inclui ratings explícitos, histórico de acessos e informações demográficas dos usuários.
+    This dataset contains ratings of books from the Book-Crossing community.
+    Includes explicit ratings, access history and demographic information of users.
     """
+    DEFAULT_RATING_SCALE = (1.0, 10.0)
 
     def __init__(self, dataset_path: str):
         super().__init__(dataset_path)
@@ -20,7 +21,7 @@ class BookCrossingLoader(BaseDatasetLoader):
         ratings_file = self.dataset_path / "book_ratings.dat"
 
         if not ratings_file.exists():
-            raise FileNotFoundError(f"Arquivo de ratings não encontrado: {ratings_file}")
+            raise FileNotFoundError(f"Rating file not found: {ratings_file}")
 
         self.ratings_df = pd.read_csv(
             ratings_file, sep="\t", header=0, dtype={"user": "int32", "item": "int32", "rating": "float32"}
@@ -37,7 +38,7 @@ class BookCrossingLoader(BaseDatasetLoader):
             try:
                 self.metadata_df = pd.read_csv(info_file, sep="\t", encoding="utf-8", on_bad_lines="skip")
             except Exception as e:
-                print(f"Erro ao carregar metadados: {e}")
+                print(f"Error loading metadata: {e}")
                 self.metadata_df = pd.DataFrame()
         else:
             self.metadata_df = pd.DataFrame()
@@ -48,7 +49,7 @@ class BookCrossingLoader(BaseDatasetLoader):
         history_file = self.dataset_path / "book_history.dat"
 
         if not history_file.exists():
-            raise FileNotFoundError(f"Arquivo de histórico não encontrado: {history_file}")
+            raise FileNotFoundError(f"History file not found: {history_file}")
 
         self.history_df = pd.read_csv(
             history_file, sep="\t", header=0, dtype={"user": "int32", "item": "int32", "accessed": "int8"}
@@ -65,10 +66,10 @@ class BookCrossingLoader(BaseDatasetLoader):
             try:
                 self.users_info_df = pd.read_csv(
                     users_file,
-                    sep=r"\s+",  # Usar regex para múltiplos espaços
+                    sep=r"\s+", # regex for multiple spaces
                     encoding="utf-8",
                     on_bad_lines="skip",
-                    engine="python",  # Necessário para regex sep
+                    engine="python",
                 )
 
                 if "User-ID" in self.users_info_df.columns:
@@ -80,7 +81,7 @@ class BookCrossingLoader(BaseDatasetLoader):
 
                 self.users_info_df = self.users_info_df.rename(columns={"User-ID": "user_id"})
             except Exception as e:
-                print(f"Erro ao carregar informações dos usuários: {e}")
+                print(f"Error loading users info: {e}")
                 self.users_info_df = pd.DataFrame()
         else:
             self.users_info_df = pd.DataFrame()

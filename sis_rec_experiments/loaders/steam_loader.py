@@ -1,14 +1,15 @@
 from typing import Any, Dict, Optional
 
 import pandas as pd
+from surprise import Dataset
 
 from sis_rec_experiments.loaders.base_loader import BaseDatasetLoader
 
 
 class SteamLoader(BaseDatasetLoader):
     """
-    Este dataset contém dados de jogos da Steam.
-    Inclui dados de compras e horas jogadas como feedback implícito.
+    This dataset contains data of games from Steam.
+    Includes purchase and play hours as implicit feedback.
     """
 
     def __init__(self, dataset_path: str):
@@ -25,7 +26,7 @@ class SteamLoader(BaseDatasetLoader):
         play_file = self.dataset_path / "game_play.dat"
 
         if not play_file.exists():
-            raise FileNotFoundError(f"Arquivo de play hours não encontrado: {play_file}")
+            raise FileNotFoundError(f"Play hours file not found: {play_file}")
 
         self.play_hours_df = pd.read_csv(
             play_file, sep="\t", header=0, dtype={"User_ID": "int32", "Game_ID": "int32", "Hours": "float32"}
@@ -42,7 +43,7 @@ class SteamLoader(BaseDatasetLoader):
             try:
                 self.metadata_df = pd.read_csv(info_file, sep="\t", encoding="utf-8", on_bad_lines="skip")
             except Exception as e:
-                print(f"Erro ao carregar metadados: {e}")
+                print(f"Error loading metadata: {e}")
                 self.metadata_df = pd.DataFrame()
         else:
             self.metadata_df = pd.DataFrame()
@@ -53,7 +54,7 @@ class SteamLoader(BaseDatasetLoader):
         purchase_file = self.dataset_path / "game_purchase.dat"
 
         if not purchase_file.exists():
-            raise FileNotFoundError(f"Arquivo de compras não encontrado: {purchase_file}")
+            raise FileNotFoundError(f"Purchase file not found: {purchase_file}")
 
         self.purchase_df = pd.read_csv(
             purchase_file, sep="\t", header=0, dtype={"User_ID": "int32", "Game_ID": "int32", "Purchase": "int8"}
@@ -73,7 +74,7 @@ class SteamLoader(BaseDatasetLoader):
                 self.users_info_df = self.users_info_df.rename(columns={"New_ID": "user_id"})
 
             except Exception as e:
-                print(f"Erro ao carregar informações dos usuários: {e}")
+                print(f"Error loading users info: {e}")
                 self.users_info_df = pd.DataFrame()
         else:
             self.users_info_df = pd.DataFrame()
@@ -134,7 +135,13 @@ class SteamLoader(BaseDatasetLoader):
             "has_play_hours": True,
             "has_purchase_data": True,
             "data_format": "DAT (Tab-separated)",
-            "data_description": "Horas jogadas e dados de compras (sem ratings explícitos)",
+            "data_description": "Play hours and purchase data (no explicit ratings)",
         }
 
         return info
+
+    def to_surprise_dataset(self, rating_scale=None, reader=None) -> Dataset:
+        raise NotImplementedError(
+            "Dataset Steam does not have explicit ratings. "
+            "To use with Surprise, it would be necessary to convert play hours to implicit ratings first."
+        )

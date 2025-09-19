@@ -1,15 +1,13 @@
 from pathlib import Path
 
-from sis_rec_experiments.loaders import (
-    AmazonMusicLoader,
-    AnimeLoader,
-    BaseDatasetLoader,
-    BookCrossingLoader,
-    SteamLoader,
-)
+from sis_rec_experiments.loaders.amazon_music_loader import AmazonMusicLoader
+from sis_rec_experiments.loaders.anime_loader import AnimeLoader
+from sis_rec_experiments.loaders.base_loader import BaseDatasetLoader
+from sis_rec_experiments.loaders.book_crossing_loader import BookCrossingLoader
+from sis_rec_experiments.loaders.steam_loader import SteamLoader
 
 
-def create_loader(dataset_name: str, base_path: str = "datasets/extracted") -> BaseDatasetLoader:
+def create_loader(dataset_name: str, base_path: str = "sis_rec_experiments/datasets/extracted") -> BaseDatasetLoader:
     loaders = {
         "amazonmusic": AmazonMusicLoader,
         "anime": AnimeLoader,
