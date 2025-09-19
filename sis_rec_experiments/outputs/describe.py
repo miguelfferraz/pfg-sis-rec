@@ -1,217 +1,182 @@
-import sys
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict
-
-import pandas as pd
+from typing import Any, Dict, List, Optional
 
 from sis_rec_experiments.loaders.builder import create_loader
 
-sys.path.append(str(Path(__file__).parent))
+
+@dataclass
+class DatasetReport:
+    name: str
+    stats: Dict[str, Any]
+    error: Optional[str] = None
+
+    @property
+    def is_success(self) -> bool:
+        return self.error is None
+
+    @property
+    def total_ratings(self) -> int:
+        return self.stats.get("total_ratings", 0)
+
+    @property
+    def unique_users(self) -> int:
+        return self.stats.get("unique_users", 0)
+
+    @property
+    def unique_items(self) -> int:
+        return self.stats.get("unique_items", 0)
+
+    @property
+    def rating_scale(self) -> tuple:
+        return self.stats.get("rating_scale", (0, 0))
+
+    @property
+    def rating_mean(self) -> float:
+        return self.stats.get("rating_mean", 0.0)
+
+    @property
+    def sparsity(self) -> float:
+        return self.stats.get("sparsity", 0.0)
+
+    @property
+    def domain(self) -> str:
+        return self.stats.get("domain", "Unknown")
 
 
-def format_stats_table(stats: Dict[str, Any]) -> str:
-    def format_number(value):
-        if isinstance(value, float):
-            if value < 0.01:
-                return f"{value:.4f}"
-            else:
-                return f"{value:.2f}"
-        elif isinstance(value, int):
-            return f"{value:,}"
-        else:
-            return str(value)
+class DatasetAnalyzer:
+    def __init__(self, base_path: str = "sis_rec_experiments/datasets/extracted"):
+        self.base_path = base_path
 
-    table = "\n\n" + "=" * 80 + "\n"
-    table += f"DATASET: {stats.get('dataset_name', 'N/A')}\n"
-    table += "\n" + "-" * 80 + "\n"
-    table += "ESTATÍSTICAS BÁSICAS\n"
-    table += "-" * 80 + "\n"
-
-    # Verificar se o dataset tem ratings explícitos
-    has_explicit_ratings = stats.get("has_explicit_ratings", True)
-
-    if has_explicit_ratings and stats.get("total_ratings", 0) > 0:
-        table += f"Total de Ratings: {format_number(stats.get('total_ratings', 0))}\n"
-        table += f"Usuários Únicos: {format_number(stats.get('unique_users', 0))}\n"
-        table += f"Items Únicos: {format_number(stats.get('unique_items', 0))}\n"
-        table += f"Rating Mínimo: {format_number(stats.get('rating_min', 0))}\n"
-        table += f"Rating Máximo: {format_number(stats.get('rating_max', 0))}\n"
-        table += f"Rating Médio: {format_number(stats.get('rating_mean', 0))}\n"
-        table += f"Desvio Padrão: {format_number(stats.get('rating_std', 0))}\n"
-        table += f"Esparsidade: {(stats.get('sparsity', 0)*100):.4f}%\n"
-
-        density = 1 - stats.get("sparsity", 1)
-        table += f"Densidade: {(density*100):.4f}%\n"
-
-        avg_ratings_per_user = stats.get("total_ratings", 0) / max(stats.get("unique_users", 1), 1)
-        avg_ratings_per_item = stats.get("total_ratings", 0) / max(stats.get("unique_items", 1), 1)
-
-        table += f"Ratings/Usuário: {format_number(avg_ratings_per_user)}\n"
-        table += f"Ratings/Item: {format_number(avg_ratings_per_item)}\n"
-    else:
-        # Dataset sem ratings explícitos (como Steam)
-        table += f"Usuários Únicos: {format_number(stats.get('unique_users', 0))}\n"
-        table += f"Items Únicos: {format_number(stats.get('unique_items', 0))}\n"
-        table += f"Tipo de Dados: {stats.get('data_description', 'Dados comportamentais')}\n"
-
-    if "total_history_records" in stats:
-        table += "\n" + "-" * 80 + "\n"
-        table += "ESTATÍSTICAS DE HISTÓRICO\n"
-        table += "-" * 80 + "\n"
-        table += f"Total de Registros de Histórico: {format_number(stats.get('total_history_records', 0))}\n"
-        table += f"Usuários Únicos: {format_number(stats.get('unique_users_history', 0))}\n"
-        table += f"Items Únicos: {format_number(stats.get('unique_items_history', 0))}\n"
-        table += f"Items/Usuário: {format_number(stats.get('avg_items_per_user_history', 0))}\n"
-
-    if "total_users_info" in stats:
-        table += "\n" + "-" * 80 + "\n"
-        table += "INFORMAÇÕES DEMOGRÁFICAS DOS USUÁRIOS\n"
-        table += "-" * 80 + "\n"
-        table += f"Total de Usuários com Info: {format_number(stats.get('total_users_info', 0))}\n"
-
-        if stats.get("avg_user_age") is not None:
-            table += f"Idade Média: {format_number(stats.get('avg_user_age', 0))} anos\n"
-            table += f"Idade Mínima: {format_number(stats.get('min_user_age', 0))} anos\n"
-            table += f"Idade Máxima: {format_number(stats.get('max_user_age', 0))} anos\n"
-        else:
-            table += "Dados de idade não disponíveis\n"
-
-    if "total_play_hours" in stats:
-        table += "\n" + "-" * 80 + "\n"
-        table += "DADOS DE HORAS JOGADAS (STEAM)\n"
-        table += "-" * 80 + "\n"
-        table += f"Total de Sessões de Jogo: {format_number(stats.get('total_play_sessions', 0))}\n"
-        table += f"Total de Horas Jogadas: {format_number(stats.get('total_play_hours', 0))} horas\n"
-        table += f"Usuários que Jogaram: {format_number(stats.get('unique_users_playing', 0))}\n"
-        table += f"Jogos com Dados: {format_number(stats.get('unique_games_played', 0))}\n"
-        table += f"Horas/Jogo: {format_number(stats.get('avg_hours_per_game', 0))} horas\n"
-        table += f"Maior Tempo em um Jogo: {format_number(stats.get('max_hours_single_game', 0))} horas\n"
-
-    table += "=" * 80 + "\n"
-
-    return table
-
-
-def analyze_dataset(
-    dataset_name: str, base_path: str = "/Users/miguelferraz/Projects/Personal/unicamp/pfg-sis-rec/datasets/extracted"
-) -> Dict[str, Any]:
-    try:
-        loader = create_loader(dataset_name, base_path)
-
-        loader.load_ratings()
-        loader.load_metadata()
-
-        stats = loader.get_dataset_info()
-
-        return stats
-
-    except Exception as e:
-        print(f"Erro ao analisar dataset {dataset_name}: {str(e)}")
-        return {"dataset_name": dataset_name, "error": str(e), "status": "failed"}
-
-
-def analyze_all_datasets(
-    base_path: str = "/Users/miguelferraz/Projects/Personal/unicamp/pfg-sis-rec/datasets/extracted",
-) -> Dict[str, Dict[str, Any]]:
-    datasets_to_analyze = ["amazonmusic", "anime", "bookcrossing", "steam"]
-
-    results = {}
-
-    for dataset_name in datasets_to_analyze:
-
+    def analyze_single(self, dataset_name: str) -> DatasetReport:
         try:
-            stats = analyze_dataset(dataset_name, base_path)
-            results[dataset_name] = stats
-
-            if "error" not in stats:
-                print(format_stats_table(stats))
-            else:
-                print(f"ERRO ao processar {dataset_name}: {stats['error']}")
-
+            loader = create_loader(dataset_name, self.base_path)
+            loader.load_ratings()
+            loader.load_metadata()
+            stats = loader.get_dataset_info()
+            return DatasetReport(name=dataset_name, stats=stats)
         except Exception as e:
-            error_msg = f"Erro inesperado ao processar {dataset_name}: {str(e)}"
-            print(error_msg)
-            print(f"ERRO: {error_msg}")
-            results[dataset_name] = {"error": str(e), "status": "failed"}
+            return DatasetReport(name=dataset_name, stats={}, error=str(e))
 
-    return results
+    def analyze_multiple(self, dataset_names: List[str]) -> List[DatasetReport]:
+        return [self.analyze_single(name) for name in dataset_names]
+
+    def discover_available_datasets(self) -> List[str]:
+        available = []
+        candidates = ["amazonmusic", "anime", "bookcrossing", "movielens", "steam"]
+
+        for dataset in candidates:
+            try:
+                create_loader(dataset, self.base_path)
+                available.append(dataset)
+            except (FileNotFoundError, ValueError):
+                continue
+
+        return available
 
 
-def generate_comparison_summary(results: Dict[str, Dict[str, Any]]) -> None:
-    print("\n" + "=" * 100)
-    print("RESUMO COMPARATIVO DOS DATASETS")
-    print("=" * 100)
+class ReportFormatter:
+    @staticmethod
+    def format_single(report: DatasetReport) -> str:
+        if not report.is_success:
+            return f"❌ {report.name}: {report.error}"
 
-    successful_results = {k: v for k, v in results.items() if "error" not in v}
+        stats = report.stats
+        dataset_name = stats.get("dataset_name", report.name)
 
-    if not successful_results:
-        print("Nenhum dataset foi carregado com sucesso para comparação.")
-        return
+        output = f"\n{dataset_name}\n"
 
-    comparison_data = []
-
-    for dataset_name, stats in successful_results.items():
-        comparison_data.append(
-            {
-                "Dataset": stats.get("dataset_name", dataset_name),
-                "Domínio": stats.get("domain", "N/A"),
-                "Total Ratings": stats.get("total_ratings", 0),
-                "Usuários": stats.get("unique_users", 0),
-                "Items": stats.get("unique_items", 0),
-                "Esparsidade (%)": f"{stats.get('sparsity', 0)*100:.2f}%",
-                "Rating Médio": f"{stats.get('rating_mean', 0):.2f}",
-                "Escala": f"{stats.get('rating_scale', (0, 0))[0]}-{stats.get('rating_scale', (0, 0))[1]}",
-            }
-        )
-
-    if comparison_data:
-        df_comparison = pd.DataFrame(comparison_data)
-        print(df_comparison.to_string(index=False))
-
-        print(f"\n{'-'*60}")
-        print("ESTATÍSTICAS GERAIS:")
-        print(f"{'-'*60}")
-
-        total_ratings = sum(stats.get("total_ratings", 0) for stats in successful_results.values())
-        total_users = sum(stats.get("unique_users", 0) for stats in successful_results.values())
-        total_items = sum(stats.get("unique_items", 0) for stats in successful_results.values())
-
-        print(f"Total de Ratings (todos datasets): {total_ratings:,}")
-        print(f"Total de Usuários (todos datasets): {total_users:,}")
-        print(f"Total de Items (todos datasets): {total_items:,}")
-
-        sparsities = [(name, stats.get("sparsity", 1)) for name, stats in successful_results.items()]
-        if sparsities:
-            most_sparse = min(sparsities, key=lambda x: x[1])
-            least_sparse = max(sparsities, key=lambda x: x[1])
-
-            print(
-                f"Dataset mais denso: {successful_results[most_sparse[0]].get('dataset_name')} ({(1-most_sparse[1])*100:.2f}% densidade)"
+        if report.total_ratings > 0:
+            output += (
+                "├─ "
+                + f"{report.unique_users:,} users, {report.unique_items:,} items, {report.total_ratings:,} ratings\n"
             )
-            print(
-                f"Dataset mais esparso: {successful_results[least_sparse[0]].get('dataset_name')} ({least_sparse[1]*100:.2f}% esparsidade)"
-            )
+            if report.rating_mean is not None:
+                output += (
+                    "├─ "
+                    + f"Rating scale: {report.rating_scale[0]:.1f}-{report.rating_scale[1]:.1f} (avg: {report.rating_mean:.2f})\n"
+                )
+            output += "├─ " + f"Sparsity: {report.sparsity*100:.1f}% | Density: {(1-report.sparsity)*100:.1f}%\n"
+        else:
+            output += "├─ " + f"{report.unique_users:,} users, {report.unique_items:,} items\n"
+            output += "├─ " + f"Data type: {stats.get('data_description', 'Implicit feedback')}\n"
+
+        output += "└─ " + f"Domain: {report.domain}\n"
+
+        return output
+
+    @staticmethod
+    def format_summary(reports: List[DatasetReport]) -> str:
+        successful = [r for r in reports if r.is_success]
+        failed = [r for r in reports if not r.is_success]
+
+        if not successful:
+            return "No datasets loaded successfully."
+
+        output = f"\n{'='*60}\n"
+        output += f"DATASET SUMMARY ({len(successful)} datasets)\n"
+        output += f"{'='*60}\n"
+
+        total_ratings = sum(r.total_ratings for r in successful)
+        total_users = sum(r.unique_users for r in successful)
+        total_items = sum(r.unique_items for r in successful)
+
+        output += f"Total ratings: {total_ratings:,}\n"
+        output += f"Total users: {total_users:,}\n"
+        output += f"Total items: {total_items:,}\n"
+
+        if len(successful) > 1:
+            rating_datasets = [r for r in successful if r.total_ratings > 0]
+            if len(rating_datasets) > 1:
+                sparsities = [(r.stats.get("dataset_name", r.name), r.sparsity) for r in rating_datasets]
+                most_dense = min(sparsities, key=lambda x: x[1])
+                most_sparse = max(sparsities, key=lambda x: x[1])
+
+                output += f"\nMost dense: {most_dense[0]} ({(1-most_dense[1])*100:.1f}%)\n"
+                output += f"Most sparse: {most_sparse[0]} ({most_sparse[1]*100:.1f}%)\n"
+
+        if failed:
+            output += f"\nFailed datasets: {', '.join(r.name for r in failed)}\n"
+
+        output += f"{'='*60}\n"
+        return output
 
 
 def main():
-    try:
-        results = analyze_all_datasets()
+    import sys
 
-        # generate_comparison_summary(results)
+    analyzer = DatasetAnalyzer()
+    formatter = ReportFormatter()
 
-        failed = len([r for r in results.values() if "error" in r])
+    args = sys.argv[1:]
 
-        print(f"Datasets com erro: {failed}")
+    if not args:
+        # No arguments: analyze all available datasets
+        available_datasets = analyzer.discover_available_datasets()
+        if not available_datasets:
+            print("No datasets found. Please extract datasets first using 'make datasets-extract'")
+            return
 
-        if failed > 0:
-            print("\nDatasets com erro:")
-            for name, result in results.items():
-                if "error" in result:
-                    print(f"  - {name}: {result['error']}")
+        print(f"Found {len(available_datasets)} datasets: {', '.join(available_datasets)}")
+        reports = analyzer.analyze_multiple(available_datasets)
 
-    except Exception as e:
-        print(f"Erro na execução principal: {str(e)}")
-        print(f"Erro na execução: {str(e)}")
+        for report in reports:
+            print(formatter.format_single(report))
+
+        if len(reports) > 1:
+            print(formatter.format_summary(reports))
+
+    elif args[0] == "--summary":
+        available_datasets = analyzer.discover_available_datasets()
+        reports = analyzer.analyze_multiple(available_datasets)
+        print(formatter.format_summary(reports))
+
+    else:
+        dataset_names = args
+        reports = analyzer.analyze_multiple(dataset_names)
+
+        for report in reports:
+            print(formatter.format_single(report))
 
 
 if __name__ == "__main__":
