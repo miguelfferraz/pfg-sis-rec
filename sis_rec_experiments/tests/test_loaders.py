@@ -43,6 +43,19 @@ class TestLoaders(unittest.TestCase):
         metadata_df = loader.load_metadata()
         self.assertIsNotNone(metadata_df)
 
+    def test_movielens_loader(self):
+        loader = create_loader("movielens")
+        
+        ratings_df = loader.load_ratings()
+        self.assertIsNotNone(ratings_df)
+        self.assertGreater(len(ratings_df), 0)
+        self.assertIn("user_id", ratings_df.columns)
+        self.assertIn("item_id", ratings_df.columns)
+        self.assertIn("rating", ratings_df.columns)
+        
+        metadata_df = loader.load_metadata()
+        self.assertIsNotNone(metadata_df)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -34,7 +34,7 @@ clean:
 	find . -type d -name "__pycache__" -delete
 	find . -type d -name "*.egg-info" -exec rm -rf {} +
 
-datasets-extract: datasets-extract-amazon datasets-extract-anime datasets-extract-books datasets-extract-retail datasets-extract-steam
+datasets-extract: datasets-extract-amazon datasets-extract-anime datasets-extract-books datasets-extract-retail datasets-extract-steam datasets-extract-movielens
 
 datasets-extract-amazon:
 	@mkdir -p $(DATASETS_PATH)/extracted
@@ -72,6 +72,12 @@ datasets-extract-steam:
 		find "$(DATASETS_PATH)/extracted" -name "*steam*" -type d -exec mv {} "$(DATASETS_PATH)/extracted/steam" \; 2>/dev/null || true; \
 	fi
 
+datasets-extract-movielens:
+	@mkdir -p $(DATASETS_PATH)/extracted/movielens
+	@if [ -f "$(DATASETS_PATH)/MovieLens100k.zip" ]; then \
+		unzip -q -o "$(DATASETS_PATH)/MovieLens100k.zip" -d "$(DATASETS_PATH)/extracted/movielens/"; \
+	fi
+
 datasets-clean:
 	@if [ -d "$(DATASETS_PATH)/extracted" ]; then \
 		rm -rf $(DATASETS_PATH)/extracted; \
@@ -82,4 +88,4 @@ datasets-clean-all:
 		rm -rf $(DATASETS_PATH); \
 	fi
 
-.PHONY: install install-dev run test format check lint clean datasets-extract datasets-extract-amazon datasets-extract-anime datasets-extract-books datasets-extract-retail datasets-extract-steam datasets-clean datasets-clean-all
+.PHONY: install install-dev run test format check lint clean datasets-extract datasets-extract-amazon datasets-extract-anime datasets-extract-books datasets-extract-retail datasets-extract-steam datasets-extract-movielens datasets-clean datasets-clean-all
