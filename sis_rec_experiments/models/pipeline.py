@@ -85,11 +85,13 @@ class ModelPipeline:
         folds = [f"Fold {r['fold']+1}" for r in fold_results]
         rmse_values = [r["rmse"] for r in fold_results]
         mae_values = [r["mae"] for r in fold_results]
+        mse_values = [r["mse"] for r in fold_results]
+        fcp_values = [r["fcp"] for r in fold_results]
 
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 12))
 
         x = np.arange(len(folds))
-        width = 0.35
+        width = 0.6
 
         ax1.bar(x, rmse_values, width, label='RMSE', color='skyblue', alpha=0.7)
         ax1.set_xlabel('Fold')
@@ -116,6 +118,32 @@ class ModelPipeline:
         ax2.axhline(y=mean_mae, color='red', linestyle='--',
                    label=f'Mean: {mean_mae:.4f}')
         ax2.legend()
+
+        ax3.bar(x, mse_values, width, label='MSE', color='lightgreen', alpha=0.7)
+        ax3.set_xlabel('Fold')
+        ax3.set_ylabel('MSE')
+        ax3.set_title(f'MSE per Fold - {results["model_name"]}')
+        ax3.set_xticks(x)
+        ax3.set_xticklabels(folds)
+        ax3.grid(True, alpha=0.3)
+
+        mean_mse = results["aggregated_metrics"]["mean_mse"]
+        ax3.axhline(y=mean_mse, color='red', linestyle='--',
+                   label=f'Mean: {mean_mse:.4f}')
+        ax3.legend()
+
+        ax4.bar(x, fcp_values, width, label='FCP', color='orange', alpha=0.7)
+        ax4.set_xlabel('Fold')
+        ax4.set_ylabel('FCP')
+        ax4.set_title(f'FCP per Fold - {results["model_name"]}')
+        ax4.set_xticks(x)
+        ax4.set_xticklabels(folds)
+        ax4.grid(True, alpha=0.3)
+
+        mean_fcp = results["aggregated_metrics"]["mean_fcp"]
+        ax4.axhline(y=mean_fcp, color='red', linestyle='--',
+                   label=f'Mean: {mean_fcp:.4f}')
+        ax4.legend()
 
         plt.tight_layout()
         

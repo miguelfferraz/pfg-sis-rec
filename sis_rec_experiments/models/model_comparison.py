@@ -32,12 +32,14 @@ def run_model_comparison():
     print("MODEL COMPARISON RESULTS")
     print("="*80)
     
-    print(f"{'Model':<15} {'RMSE':<10} {'MAE':<10} {'Time (s)':<10} {'Factors':<15}")
-    print("-"*80)
+    print(f"{'Model':<15} {'RMSE':<10} {'MAE':<10} {'MSE':<10} {'FCP':<10} {'Time (s)':<10} {'Factors':<15}")
+    print("-"*105)
     
     for model_name, result in results.items():
         rmse = result['summary']['rmse']
         mae = result['summary']['mae']
+        mse = result['summary']['mse']
+        fcp = result['summary']['fcp']
         time = result['summary']['total_time']
         
         if model_name == "svd":
@@ -46,7 +48,7 @@ def run_model_comparison():
         else:
             factors_str = "N/A"
         
-        print(f"{model_name.upper():<15} {rmse:<10.4f} {mae:<10.4f} {time:<10.2f} {factors_str:<15}")
+        print(f"{model_name.upper():<15} {rmse:<10.4f} {mae:<10.4f} {mse:<10.4f} {fcp:<10.4f} {time:<10.2f} {factors_str:<15}")
     
     baseline_rmse = results['baseline']['summary']['rmse']
     svd_rmse = results['svd']['summary']['rmse']
@@ -56,9 +58,19 @@ def run_model_comparison():
     svd_mae = results['svd']['summary']['mae']
     mae_improvement = (baseline_mae - svd_mae) / baseline_mae * 100
     
+    baseline_mse = results['baseline']['summary']['mse']
+    svd_mse = results['svd']['summary']['mse']
+    mse_improvement = (baseline_mse - svd_mse) / baseline_mse * 100
+    
+    baseline_fcp = results['baseline']['summary']['fcp']
+    svd_fcp = results['svd']['summary']['fcp']
+    fcp_improvement = (svd_fcp - baseline_fcp) / baseline_fcp * 100
+    
     print(f"\nSVD Improvements over Baseline:")
     print(f"  RMSE: {rmse_improvement:+.2f}%")
     print(f"  MAE: {mae_improvement:+.2f}%")
+    print(f"  MSE: {mse_improvement:+.2f}%")
+    print(f"  FCP: {fcp_improvement:+.2f}%")
     
     generate_comparison_plot(results)
     
@@ -99,34 +111,33 @@ def generate_comparison_plot(results):
         ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + mae_stds[i] + 0.001,
                 f'{value:.4f}', ha='center', va='bottom', fontweight='bold')
     
-    # Training time comparison
-    time_values = [results[m]['summary']['total_time'] for m in models]
+    # MSE comparison
+    mse_values = [results[m]['summary']['mse'] for m in models]
+    mse_stds = [results[m]['aggregated_metrics']['std_mse'] for m in models]
     
-    bars3 = ax3.bar(model_names, time_values, alpha=0.7, color=['lightblue', 'lightcoral'])
-    ax3.set_ylabel('Time (seconds)')
-    ax3.set_title('Training Time Comparison')
+    bars3 = ax3.bar(model_names, mse_values, yerr=mse_stds,
+                    capsize=5, alpha=0.7, color=['lightblue', 'lightcoral'])
+    ax3.set_ylabel('MSE')
+    ax3.set_title('MSE Comparison')
     ax3.grid(True, alpha=0.3)
     
-    for bar, value in zip(bars3, time_values):
-        ax3.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
-                f'{value:.2f}s', ha='center', va='bottom', fontweight='bold')
+    for i, (bar, value) in enumerate(zip(bars3, mse_values)):
+        ax3.text(bar.get_x() + bar.get_width()/2, bar.get_height() + mse_stds[i] + 0.001,
+                f'{value:.4f}', ha='center', va='bottom', fontweight='bold')
     
-    # Fold-wise RMSE comparison
-    baseline_folds = [f['rmse'] for f in results['baseline']['fold_results']]
-    svd_folds = [f['rmse'] for f in results['svd']['fold_results']]
+    # FCP comparison
+    fcp_values = [results[m]['summary']['fcp'] for m in models]
+    fcp_stds = [results[m]['aggregated_metrics']['std_fcp'] for m in models]
     
-    x = np.arange(1, 6)
-    width = 0.35
-    
-    ax4.bar(x - width/2, baseline_folds, width, label='Baseline', alpha=0.7, color='lightblue')
-    ax4.bar(x + width/2, svd_folds, width, label='SVD', alpha=0.7, color='lightcoral')
-    
-    ax4.set_xlabel('Fold')
-    ax4.set_ylabel('RMSE')
-    ax4.set_title('RMSE by Fold')
-    ax4.set_xticks(x)
-    ax4.legend()
+    bars4 = ax4.bar(model_names, fcp_values, yerr=fcp_stds,
+                    capsize=5, alpha=0.7, color=['lightblue', 'lightcoral'])
+    ax4.set_ylabel('FCP')
+    ax4.set_title('FCP Comparison (Higher is Better)')
     ax4.grid(True, alpha=0.3)
+    
+    for i, (bar, value) in enumerate(zip(bars4, fcp_values)):
+        ax4.text(bar.get_x() + bar.get_width()/2, bar.get_height() + fcp_stds[i] + 0.001,
+                f'{value:.4f}', ha='center', va='bottom', fontweight='bold')
     
     plt.tight_layout()
     

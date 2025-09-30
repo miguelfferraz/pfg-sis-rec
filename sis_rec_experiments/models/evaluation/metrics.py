@@ -1,7 +1,7 @@
 import time
 from typing import Dict, List
 
-from surprise.accuracy import mae, rmse
+from surprise.accuracy import mae, rmse, mse, fcp
 
 
 class MetricsCalculator:
@@ -9,7 +9,9 @@ class MetricsCalculator:
     def calculate_accuracy_metrics(predictions) -> Dict[str, float]:
         return {
             "rmse": rmse(predictions, verbose=False),
-            "mae": mae(predictions, verbose=False)
+            "mae": mae(predictions, verbose=False),
+            "mse": mse(predictions, verbose=False),
+            "fcp": fcp(predictions, verbose=False)
         }
 
     @staticmethod
@@ -22,7 +24,7 @@ class MetricsCalculator:
 
     @staticmethod
     def aggregate_cv_results(fold_results: List[Dict]) -> Dict[str, float]:
-        metrics = ["rmse", "mae", "fit_time", "test_time"]
+        metrics = ["rmse", "mae", "mse", "fcp", "fit_time", "test_time"]
         aggregated = {}
         
         for metric in metrics:
