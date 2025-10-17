@@ -34,7 +34,7 @@ clean:
 	find . -type d -name "__pycache__" -delete
 	find . -type d -name "*.egg-info" -exec rm -rf {} +
 
-datasets-extract: datasets-extract-amazon datasets-extract-anime datasets-extract-books datasets-extract-retail datasets-extract-steam datasets-extract-movielens
+datasets-extract: datasets-extract-amazon datasets-extract-anime datasets-extract-books datasets-extract-retail datasets-extract-steam datasets-extract-movielens datasets-extract-movielens-1m
 
 datasets-extract-amazon:
 	@mkdir -p $(DATASETS_PATH)/extracted
@@ -76,6 +76,12 @@ datasets-extract-movielens:
 	@mkdir -p $(DATASETS_PATH)/extracted/movielens
 	@if [ -f "$(DATASETS_PATH)/MovieLens100k.zip" ]; then \
 		unzip -q -o "$(DATASETS_PATH)/MovieLens100k.zip" -d "$(DATASETS_PATH)/extracted/movielens/"; \
+	fi
+
+datasets-extract-movielens-1m:
+	@mkdir -p $(DATASETS_PATH)/extracted/ml-1m
+	@if [ -f "$(DATASETS_PATH)/MovieLens1M.zip" ]; then \
+		unzip -q -o "$(DATASETS_PATH)/MovieLens1M.zip" -d "$(DATASETS_PATH)/extracted/ml-1m/"; \
 	fi
 
 datasets-clean:
