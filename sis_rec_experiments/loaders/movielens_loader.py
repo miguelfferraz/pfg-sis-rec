@@ -48,6 +48,22 @@ class MovieLensLoader(BaseDatasetLoader):
 
         return self.metadata_df
 
+    def load_user_demographics(self) -> pd.DataFrame:
+        users_file = self.dataset_path / "u.user"
+
+        if not users_file.exists():
+            raise FileNotFoundError(f"User demographics file not found: {users_file}")
+
+        demographics_df = pd.read_csv(
+            users_file,
+            sep="|",
+            header=None,
+            names=["user_id", "age", "gender", "occupation", "zip_code"],
+            dtype={"user_id": "int32", "age": "int32", "gender": "str", "occupation": "str", "zip_code": "str"},
+        )
+
+        return demographics_df
+
     def get_dataset_info(self) -> Dict[str, Any]:
         if self.ratings_df is None:
             self.load_ratings()
@@ -60,9 +76,10 @@ class MovieLensLoader(BaseDatasetLoader):
             "dataset_type": "Movie Ratings",
             "domain": "Movies/Entertainment",
             "has_metadata": self.metadata_df is not None and not self.metadata_df.empty,
+            "has_demographics": True,
             "rating_scale": (1.0, 5.0),
             "data_format": "TAB (Tab-separated)",
-            "description": "Classic MovieLens dataset with 100k ratings",
+            "description": "Classic MovieLens dataset with 100k ratings and user demographics",
         }
 
         return info
