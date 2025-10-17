@@ -4,8 +4,8 @@ from sis_rec_experiments.loaders.amazon_music_loader import AmazonMusicLoader
 from sis_rec_experiments.loaders.anime_loader import AnimeLoader
 from sis_rec_experiments.loaders.base_loader import BaseDatasetLoader
 from sis_rec_experiments.loaders.book_crossing_loader import BookCrossingLoader
-from sis_rec_experiments.loaders.movielens_loader import MovieLensLoader
 from sis_rec_experiments.loaders.movielens_1m_loader import MovieLens1MLoader
+from sis_rec_experiments.loaders.movielens_loader import MovieLensLoader
 from sis_rec_experiments.loaders.steam_loader import SteamLoader
 
 

@@ -67,10 +67,10 @@ class TestLoaders(unittest.TestCase):
         self.assertIn("item_id", ratings_df.columns)
         self.assertIn("rating", ratings_df.columns)
         self.assertIn("timestamp", ratings_df.columns)
-        
+
         self.assertGreaterEqual(ratings_df["rating"].min(), 1.0)
         self.assertLessEqual(ratings_df["rating"].max(), 5.0)
-        
+
         self.assertGreater(len(ratings_df), 900000)
 
         metadata_df = loader.load_metadata()
@@ -89,7 +89,7 @@ class TestLoaders(unittest.TestCase):
         self.assertIn("age", users_df.columns)
         self.assertIn("occupation", users_df.columns)
         self.assertIn("occupation_name", users_df.columns)
-        
+
         self.assertEqual(len(users_df), 6040)
 
 

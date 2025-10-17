@@ -43,7 +43,7 @@ class ModelEvaluator:
             "fcp": accuracy_metrics["fcp"],
             "fit_time": fit_time,
             "test_time": test_time,
-            "n_predictions": len(predictions)
+            "n_predictions": len(predictions),
         }
 
     def _compile_results(self, model: BaseModel, fold_results: List[Dict]) -> Dict:
@@ -52,10 +52,7 @@ class ModelEvaluator:
         return {
             "model_name": model.get_name(),
             "model_params": model.get_params(),
-            "cv_config": {
-                "n_folds": self.cv_folds,
-                "random_state": self.random_state
-            },
+            "cv_config": {"n_folds": self.cv_folds, "random_state": self.random_state},
             "fold_results": fold_results,
             "aggregated_metrics": aggregated_metrics,
             "summary": {
@@ -63,6 +60,6 @@ class ModelEvaluator:
                 "mae": aggregated_metrics["mean_mae"],
                 "mse": aggregated_metrics["mean_mse"],
                 "fcp": aggregated_metrics["mean_fcp"],
-                "total_time": sum(fold["fit_time"] + fold["test_time"] for fold in fold_results)
-            }
+                "total_time": sum(fold["fit_time"] + fold["test_time"] for fold in fold_results),
+            },
         }
