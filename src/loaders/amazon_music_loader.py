@@ -3,7 +3,7 @@ from typing import Any, Dict
 
 import pandas as pd
 
-from sis_rec_experiments.loaders.base_loader import BaseDatasetLoader
+from src.loaders.base_loader import BaseDatasetLoader
 
 
 class AmazonMusicLoader(BaseDatasetLoader):

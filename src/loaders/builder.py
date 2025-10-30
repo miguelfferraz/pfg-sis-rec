@@ -1,12 +1,11 @@
 from pathlib import Path
 
-from sis_rec_experiments.loaders.amazon_music_loader import AmazonMusicLoader
-from sis_rec_experiments.loaders.anime_loader import AnimeLoader
-from sis_rec_experiments.loaders.base_loader import BaseDatasetLoader
-from sis_rec_experiments.loaders.book_crossing_loader import BookCrossingLoader
-from sis_rec_experiments.loaders.movielens_1m_loader import MovieLens1MLoader
-from sis_rec_experiments.loaders.movielens_loader import MovieLensLoader
-from sis_rec_experiments.loaders.steam_loader import SteamLoader
+from src.loaders.amazon_music_loader import AmazonMusicLoader
+from src.loaders.anime_loader import AnimeLoader
+from src.loaders.base_loader import BaseDatasetLoader
+from src.loaders.book_crossing_loader import BookCrossingLoader
+from src.loaders.movielens_1m_loader import MovieLens1MLoader
+from src.loaders.movielens_loader import MovieLensLoader
 
 
 def create_loader(dataset_name: str, base_path: str = "sis_rec_experiments/datasets/extracted") -> BaseDatasetLoader:
@@ -16,7 +15,6 @@ def create_loader(dataset_name: str, base_path: str = "sis_rec_experiments/datas
         "bookcrossing": BookCrossingLoader,
         "movielens": MovieLensLoader,
         "movielens1m": MovieLens1MLoader,
-        "steam": SteamLoader,
     }
 
     dataset_name = dataset_name.lower()
@@ -29,8 +27,6 @@ def create_loader(dataset_name: str, base_path: str = "sis_rec_experiments/datas
         "bookcrossing": "book_crossing",
         "movielens": "movielens",
         "movielens1m": "ml-1m",
-        "steam": "steam",
-        "retailrocket": "RetailRocket_Ecommerce",
     }
 
     dataset_path = Path(base_path) / path_mapping[dataset_name]

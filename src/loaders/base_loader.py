@@ -33,13 +33,6 @@ class BaseDatasetLoader(ABC):
         pass
 
     def to_surprise_dataset(self, rating_scale=None, reader=None) -> Dataset:
-        """
-        Convert the dataset to the Surprise format.
-
-        Args:
-            rating_scale: Tuple (min, max) If None, uses the default rating scale.
-            reader: surprise.Reader instance, if None, creates an automatic one.
-        """
         self._validate_ratings_loaded()
 
         if self._surprise_dataset is not None:
