@@ -11,6 +11,7 @@ from ..loaders.builder import create_loader
 from ..preprocessing import ColdStartFilter, StatsAnalyzer
 from .evaluation.evaluator import ModelEvaluator
 from .evaluation.fairness import FairnessEvaluator, FairnessVisualizer
+from .evaluation.fairness.fairness_evaluator_ml1m import FairnessEvaluatorML1M
 from .model_factory import ModelFactory
 
 
@@ -43,10 +44,19 @@ class ModelPipeline:
                     "rating_threshold": 4.0,
                 }
             self.fairness_config = fairness_config
-            self.fairness_evaluator = FairnessEvaluator(
-                sensitive_features=fairness_config["sensitive_features"],
-                rating_threshold=fairness_config.get("rating_threshold", 4.0),
-            )
+            
+            # Escolhe o avaliador apropriado baseado na configuração
+            if fairness_config.get("use_ml1m_analyzer", False):
+                self.fairness_evaluator = FairnessEvaluatorML1M(
+                    sensitive_features=fairness_config["sensitive_features"],
+                    rating_threshold=fairness_config.get("rating_threshold", 4.0),
+                    use_ml1m_analyzer=True
+                )
+            else:
+                self.fairness_evaluator = FairnessEvaluator(
+                    sensitive_features=fairness_config["sensitive_features"],
+                    rating_threshold=fairness_config.get("rating_threshold", 4.0),
+                )
             self.fairness_visualizer = FairnessVisualizer()
 
     def run_experiment(self, dataset_name: str, model_name: str, model_params: Dict = None) -> Dict:
@@ -186,10 +196,15 @@ class ModelPipeline:
 
     def _evaluate_fairness(self, results: Dict, dataset_name: str, loader) -> Dict:
         try:
-            # Carrega dados demográficos (apenas para MovieLens por enquanto)
+            # Carrega dados demográficos (suporta MovieLens 100k e 1M)
             if hasattr(loader, "load_user_demographics"):
                 user_demographics = loader.load_user_demographics()
+            elif hasattr(loader, "load_users"):
+                user_demographics = loader.load_users()
+            else:
+                user_demographics = None
 
+            if user_demographics is not None:
                 # Verifica se temos predições armazenadas
                 if "all_predictions" in results and results["all_predictions"]:
                     # Avaliação completa de fairness com predições
