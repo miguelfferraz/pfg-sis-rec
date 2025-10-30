@@ -1,0 +1,60 @@
+{
+  "dataset": "MovieLens 1M",
+  "total_models": 5,
+  "preprocessing_applied": true,
+  "fairness_threshold": 0.1,
+  "sensitive_features": [
+    "gender",
+    "age_group"
+  ],
+  "age_groups": [
+    "Young",
+    "Adult",
+    "Senior"
+  ],
+  "models_tested": [
+    "Baseline",
+    "KNN",
+    "KNN_Baseline",
+    "SVD",
+    "SVD++"
+  ],
+  "demographic_distribution": {
+    "gender": {
+      "Male": 4331,
+      "Female": 1709
+    },
+    "age_group": {
+      "Adult": 4335,
+      "Young": 1325,
+      "Senior": 380
+    },
+    "occupation_category": {
+      "Professional": 2606,
+      "Other": 1345,
+      "Education": 954,
+      "Service": 587,
+      "Creative": 548
+    },
+    "gender_age_cross": {
+      "Female_Adult": 1231,
+      "Female_Senior": 102,
+      "Female_Young": 376,
+      "Male_Adult": 3104,
+      "Male_Senior": 278,
+      "Male_Young": 949
+    },
+    "gender_occupation_cross": {
+      "Female_Creative": 169,
+      "Female_Education": 300,
+      "Female_Other": 428,
+      "Female_Professional": 602,
+      "Female_Service": 210,
+      "Male_Creative": 379,
+      "Male_Education": 654,
+      "Male_Other": 917,
+      "Male_Professional": 2004,
+      "Male_Service": 377
+    }
+  }
+}

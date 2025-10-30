@@ -1,0 +1,201 @@
+{
+  "model_name": "SVD",
+  "model_params": {
+    "n_factors": 50,
+    "n_epochs": 20,
+    "lr_all": 0.005,
+    "reg_all": 0.02,
+    "biased": true
+  },
+  "cv_config": {
+    "n_folds": 5,
+    "random_state": 42
+  },
+  "fold_results": [
+    {
+      "fold": 0,
+      "rmse": 0.9302702933323002,
+      "mae": 0.7332062311010138,
+      "mse": 0.8654028186565639,
+      "fcp": 0.7060067142263627,
+      "fit_time": 0.19959306716918945,
+      "test_time": 0.027669906616210938,
+      "n_predictions": 19245
+    },
+    {
+      "fold": 1,
+      "rmse": 0.9329737387727551,
+      "mae": 0.7370827172015096,
+      "mse": 0.8704399972396132,
+      "fcp": 0.7000562614871401,
+      "fit_time": 0.24485993385314941,
+      "test_time": 0.027688980102539062,
+      "n_predictions": 19244
+    },
+    {
+      "fold": 2,
+      "rmse": 0.9317749602189509,
+      "mae": 0.734473536636258,
+      "mse": 0.8682045764910276,
+      "fcp": 0.7022728307909245,
+      "fit_time": 0.21290326118469238,
+      "test_time": 0.028148889541625977,
+      "n_predictions": 19244
+    },
+    {
+      "fold": 3,
+      "rmse": 0.9249093229579545,
+      "mae": 0.7312843699666447,
+      "mse": 0.8554572556945417,
+      "fcp": 0.7074081183451897,
+      "fit_time": 0.22396588325500488,
+      "test_time": 0.027637958526611328,
+      "n_predictions": 19244
+    },
+    {
+      "fold": 4,
+      "rmse": 0.9322004781439945,
+      "mae": 0.7370909826966785,
+      "mse": 0.8689977314518921,
+      "fcp": 0.6998156569749823,
+      "fit_time": 0.2056739330291748,
+      "test_time": 0.027563095092773438,
+      "n_predictions": 19244
+    }
+  ],
+  "aggregated_metrics": {
+    "mean_rmse": 0.9304257586851911,
+    "std_rmse": 0.0028954242891659383,
+    "mean_mae": 0.7346275675204208,
+    "std_mae": 0.0022502029642301417,
+    "mean_mse": 0.8657004759067277,
+    "std_mse": 0.005378059807871164,
+    "mean_fcp": 0.7031119163649198,
+    "std_fcp": 0.0030901010796485916,
+    "mean_fit_time": 0.2173992156982422,
+    "std_fit_time": 0.015949714420518124,
+    "mean_test_time": 0.027741765975952147,
+    "std_test_time": 0.0002080379699842692
+  },
+  "summary": {
+    "rmse": 0.9304257586851911,
+    "mae": 0.7346275675204208,
+    "mse": 0.8657004759067277,
+    "fcp": 0.7031119163649198,
+    "total_time": 1.2257049083709717
+  },
+  "dataset_name": "movielens",
+  "experiment_timestamp": "2025-10-17T15:14:22.299588",
+  "preprocessing_applied": true,
+  "fairness_evaluated": true,
+  "preprocessing_report": {
+    "original_stats": {
+      "ratings_count": 100000,
+      "users_count": 943,
+      "items_count": 1682,
+      "sparsity": 0.9369533063577546,
+      "density": 0.06304669364224535,
+      "avg_ratings_per_user": 106.04453870625663,
+      "avg_ratings_per_item": 59.45303210463734
+    },
+    "final_stats": {
+      "ratings_count": 96221,
+      "users_count": 938,
+      "items_count": 1315,
+      "sparsity": 0.9219916171451271,
+      "density": 0.07800838285487288,
+      "avg_ratings_per_user": 102.58102345415779,
+      "avg_ratings_per_item": 73.17186311787073
+    },
+    "iterations_performed": 2,
+    "iteration_details": [
+      {
+        "iteration": 0,
+        "ratings_count": 96221,
+        "users_count": 938,
+        "items_count": 1315
+      },
+      {
+        "iteration": 1,
+        "ratings_count": 96221,
+        "users_count": 938,
+        "items_count": 1315
+      }
+    ],
+    "reduction_summary": {
+      "ratings_reduction": 0.03779,
+      "users_reduction": 0.005302226935312832,
+      "items_reduction": 0.21819262782401902,
+      "sparsity_change": -0.014961689212627527
+    }
+  },
+  "fairness_evaluation": {
+    "demographic_statistics": {
+      "group_statistics": {
+        "gender": {
+          "Male": 670,
+          "Female": 273
+        },
+        "age_group": {
+          "Adult": 481,
+          "Young": 272,
+          "Middle_Age": 168,
+          "Senior": 22
+        },
+        "occupation_category": {
+          "Education": 342,
+          "Professional": 215,
+          "Other": 135,
+          "Service": 133,
+          "Creative": 91,
+          "Technical": 27
+        },
+        "gender_age_cross": {
+          "Female_Adult": 142,
+          "Female_Middle_Age": 53,
+          "Female_Senior": 2,
+          "Female_Young": 76,
+          "Male_Adult": 339,
+          "Male_Middle_Age": 115,
+          "Male_Senior": 20,
+          "Male_Young": 196
+        },
+        "gender_occupation_cross": {
+          "Female_Creative": 34,
+          "Female_Education": 115,
+          "Female_Other": 47,
+          "Female_Professional": 16,
+          "Female_Service": 60,
+          "Female_Technical": 1,
+          "Male_Creative": 57,
+          "Male_Education": 227,
+          "Male_Other": 88,
+          "Male_Professional": 199,
+          "Male_Service": 73,
+          "Male_Technical": 26
+        }
+      },
+      "minority_groups": {
+        "gender": [],
+        "age_group": [
+          "Senior"
+        ],
+        "occupation_category": [
+          "Creative",
+          "Technical"
+        ]
+      },
+      "total_users": 943
+    },
+    "fairness_config": {
+      "sensitive_features": [
+        "gender",
+        "age_group",
+        "occupation_category"
+      ],
+      "rating_threshold": 4.0
+    },
+    "evaluation_status": "completed_basic",
+    "note": "Avalia\u00e7\u00e3o b\u00e1sica - integra\u00e7\u00e3o completa requer modifica\u00e7\u00e3o do evaluator"
+  }
+}

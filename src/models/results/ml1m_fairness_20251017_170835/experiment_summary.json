@@ -1,0 +1,87 @@
+{
+  "experiment_info": {
+    "dataset": "MovieLens 1M",
+    "total_models": 5,
+    "successful_runs": 5,
+    "fairness_config": {
+      "sensitive_features": [
+        "gender",
+        "age_group"
+      ],
+      "rating_threshold": 4.0,
+      "use_ml1m_analyzer": true
+    },
+    "demographic_analysis": {
+      "total_users": 6040,
+      "original_age_codes": {
+        "1": 222,
+        "18": 1103,
+        "25": 2096,
+        "35": 1193,
+        "45": 550,
+        "50": 496,
+        "56": 380
+      },
+      "grouped_ages": {
+        "Adult": 4335,
+        "Young": 1325,
+        "Senior": 380
+      },
+      "gender_distribution": {
+        "Male": 4331,
+        "Female": 1709
+      },
+      "occupation_categories": {
+        "Professional": 2606,
+        "Other": 1345,
+        "Education": 954,
+        "Service": 587,
+        "Creative": 548
+      },
+      "age_mapping_used": {
+        "age_code_mapping": {
+          "1": "Young",
+          "18": "Young",
+          "25": "Adult",
+          "35": "Adult",
+          "45": "Adult",
+          "50": "Adult",
+          "56": "Senior"
+        },
+        "age_groups_description": {
+          "Young": "Under 18 + 18-24 years (codes 1, 18)",
+          "Adult": "25-34 + 35-44 + 45-49 + 50-55 years (codes 25, 35, 45, 50)",
+          "Senior": "56+ years (code 56)"
+        },
+        "note": "Adult group combines original Adult and Middle_Age as requested"
+      }
+    }
+  },
+  "models_results": {
+    "Baseline": {
+      "rmse": null,
+      "mae": null,
+      "fairness_score": 0.5
+    },
+    "KNN": {
+      "rmse": null,
+      "mae": null,
+      "fairness_score": 0.5
+    },
+    "KNN_Baseline": {
+      "rmse": null,
+      "mae": null,
+      "fairness_score": 0.5
+    },
+    "SVD": {
+      "rmse": null,
+      "mae": null,
+      "fairness_score": 0.5
+    },
+    "SVD++": {
+      "rmse": null,
+      "mae": null,
+      "fairness_score": 0.75
+    }
+  }
+}

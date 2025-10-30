@@ -1,0 +1,138 @@
+{
+  "model_name": "KNNBaseline_User",
+  "model_params": {
+    "k": 40,
+    "min_k": 1,
+    "sim_options": {
+      "name": "cosine",
+      "user_based": true
+    },
+    "bsl_options": {
+      "method": "als",
+      "n_epochs": 5,
+      "reg_u": 15,
+      "reg_i": 10
+    }
+  },
+  "cv_config": {
+    "n_folds": 5,
+    "random_state": 42
+  },
+  "fold_results": [
+    {
+      "fold": 0,
+      "rmse": 0.9074832463662514,
+      "mae": 0.7177299629898795,
+      "mse": 0.8235258424354307,
+      "fcp": 0.7094334397525617,
+      "fit_time": 6.185663223266602,
+      "test_time": 23.752513885498047,
+      "n_predictions": 141834
+    },
+    {
+      "fold": 1,
+      "rmse": 0.9116368422504162,
+      "mae": 0.7207060652700487,
+      "mse": 0.8310817321483102,
+      "fcp": 0.7080188295982187,
+      "fit_time": 6.169735908508301,
+      "test_time": 21.193527936935425,
+      "n_predictions": 141833
+    },
+    {
+      "fold": 2,
+      "rmse": 0.9089423286988747,
+      "mae": 0.718738433125652,
+      "mse": 0.8261761569005331,
+      "fcp": 0.709431497444362,
+      "fit_time": 6.273550748825073,
+      "test_time": 23.6689510345459,
+      "n_predictions": 141833
+    },
+    {
+      "fold": 3,
+      "rmse": 0.9129581249773863,
+      "mae": 0.7208679764030599,
+      "mse": 0.8334925379622249,
+      "fcp": 0.7078947308462379,
+      "fit_time": 6.2654500007629395,
+      "test_time": 25.32818627357483,
+      "n_predictions": 141833
+    },
+    {
+      "fold": 4,
+      "rmse": 0.910989823947871,
+      "mae": 0.7204260499187622,
+      "mse": 0.8299024593365729,
+      "fcp": 0.7099934502459492,
+      "fit_time": 6.237686634063721,
+      "test_time": 24.294348001480103,
+      "n_predictions": 141833
+    }
+  ],
+  "aggregated_metrics": {
+    "mean_rmse": 0.9104020732481599,
+    "std_rmse": 0.0019521224516993942,
+    "mean_mae": 0.7196936975414804,
+    "std_mae": 0.0012416877836564691,
+    "mean_mse": 0.8288357457566145,
+    "std_mse": 0.003553492156830921,
+    "mean_fcp": 0.7089543895774659,
+    "std_fcp": 0.000840823068325207,
+    "mean_fit_time": 6.226417303085327,
+    "std_fit_time": 0.041822927991860305,
+    "mean_test_time": 23.64750542640686,
+    "std_test_time": 1.362100263298287
+  },
+  "summary": {
+    "rmse": 0.9104020732481599,
+    "mae": 0.7196936975414804,
+    "mse": 0.8288357457566145,
+    "fcp": 0.7089543895774659,
+    "total_time": 149.36961364746094
+  },
+  "dataset_name": "movielens1m",
+  "experiment_timestamp": "2025-10-17T13:15:01.865092",
+  "preprocessing_applied": true,
+  "preprocessing_report": {
+    "original_stats": {
+      "ratings_count": 1000209,
+      "users_count": 6040,
+      "items_count": 3706,
+      "sparsity": 0.9553163743776871,
+      "density": 0.04468362562231287,
+      "avg_ratings_per_user": 165.5975165562914,
+      "avg_ratings_per_item": 269.88909875876953
+    },
+    "final_stats": {
+      "ratings_count": 709166,
+      "users_count": 5644,
+      "items_count": 3062,
+      "sparsity": 0.9589648793815134,
+      "density": 0.041035120618486576,
+      "avg_ratings_per_user": 125.6495393338058,
+      "avg_ratings_per_item": 231.60222077073809
+    },
+    "iterations_performed": 2,
+    "iteration_details": [
+      {
+        "iteration": 0,
+        "ratings_count": 709166,
+        "users_count": 5644,
+        "items_count": 3062
+      },
+      {
+        "iteration": 1,
+        "ratings_count": 709166,
+        "users_count": 5644,
+        "items_count": 3062
+      }
+    ],
+    "reduction_summary": {
+      "ratings_reduction": 0.2909821847233928,
+      "users_reduction": 0.06556291390728476,
+      "items_reduction": 0.1737722611980572,
+      "sparsity_change": 0.0036485050038262967
+    }
+  }
+}

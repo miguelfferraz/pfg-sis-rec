@@ -1,0 +1,125 @@
+{
+  "model_name": "SVD",
+  "model_params": {
+    "n_factors": 100,
+    "n_epochs": 20,
+    "lr_all": 0.005,
+    "reg_all": 0.02,
+    "biased": true
+  },
+  "cv_config": {
+    "n_folds": 5,
+    "random_state": 42
+  },
+  "fold_results": [
+    {
+      "fold": 0,
+      "rmse": 0.9254965703124695,
+      "mae": 0.6896022312372114,
+      "mse": 0.8565439016601437,
+      "fcp": 0.5772827293949488,
+      "fit_time": 0.2051539421081543,
+      "test_time": 0.021203994750976562,
+      "n_predictions": 12942
+    },
+    {
+      "fold": 1,
+      "rmse": 0.9210780454300435,
+      "mae": 0.6861152426962036,
+      "mse": 0.8483847657732293,
+      "fcp": 0.5957804485307774,
+      "fit_time": 0.22690105438232422,
+      "test_time": 0.02161884307861328,
+      "n_predictions": 12941
+    },
+    {
+      "fold": 2,
+      "rmse": 0.9225422891508572,
+      "mae": 0.6868209855592602,
+      "mse": 0.8510842752717038,
+      "fcp": 0.5973224559318834,
+      "fit_time": 0.21001696586608887,
+      "test_time": 0.021522998809814453,
+      "n_predictions": 12941
+    },
+    {
+      "fold": 3,
+      "rmse": 0.9256755803271524,
+      "mae": 0.6903512420447286,
+      "mse": 0.8568752800140104,
+      "fcp": 0.6204921340336126,
+      "fit_time": 0.2060871124267578,
+      "test_time": 0.02144002914428711,
+      "n_predictions": 12941
+    },
+    {
+      "fold": 4,
+      "rmse": 0.9200979334925191,
+      "mae": 0.6868977639109533,
+      "mse": 0.8465802072172042,
+      "fcp": 0.5833642173631348,
+      "fit_time": 0.2111968994140625,
+      "test_time": 0.021625995635986328,
+      "n_predictions": 12941
+    }
+  ],
+  "aggregated_metrics": {
+    "mean_rmse": 0.9229780837426084,
+    "std_rmse": 0.0022678002735999664,
+    "mean_mae": 0.6879574930896715,
+    "std_mae": 0.0016878246025550934,
+    "mean_mse": 0.8518936859872582,
+    "std_mse": 0.004186681460689663,
+    "mean_fcp": 0.5948483970508714,
+    "std_fcp": 0.014866270527919653,
+    "mean_fit_time": 0.21187119483947753,
+    "std_fit_time": 0.007853236414342718,
+    "mean_test_time": 0.021482372283935548,
+    "std_test_time": 0.00015504157635349422
+  },
+  "summary": {
+    "rmse": 0.9229780837426084,
+    "mae": 0.6879574930896715,
+    "mse": 0.8518936859872582,
+    "fcp": 0.5948483970508714,
+    "total_time": 1.1667678356170654
+  },
+  "dataset_name": "amazonmusic",
+  "experiment_timestamp": "2025-09-26T15:14:31.394781",
+  "preprocessing_applied": true,
+  "preprocessing_report": {
+    "original_stats": {
+      "ratings_count": 64706,
+      "users_count": 5541,
+      "items_count": 3568,
+      "sparsity": 0.9967271088817725,
+      "density": 0.0032728911182274834,
+      "avg_ratings_per_user": 11.677675509835769,
+      "avg_ratings_per_item": 18.135089686098656
+    },
+    "final_stats": {
+      "ratings_count": 64706,
+      "users_count": 5541,
+      "items_count": 3568,
+      "sparsity": 0.9967271088817725,
+      "density": 0.0032728911182274834,
+      "avg_ratings_per_user": 11.677675509835769,
+      "avg_ratings_per_item": 18.135089686098656
+    },
+    "iterations_performed": 1,
+    "iteration_details": [
+      {
+        "iteration": 0,
+        "ratings_count": 64706,
+        "users_count": 5541,
+        "items_count": 3568
+      }
+    ],
+    "reduction_summary": {
+      "ratings_reduction": 0.0,
+      "users_reduction": 0.0,
+      "items_reduction": 0.0,
+      "sparsity_change": 0.0
+    }
+  }
+}
