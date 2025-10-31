@@ -11,6 +11,24 @@ class BookCrossingLoader(BaseDatasetLoader):
 
     DEFAULT_RATING_SCALE = (1.0, 10.0)
 
+    def _clean_country(self, country: str) -> str:
+        """Clean and consolidate country names."""
+        if not country or pd.isna(country):
+            return "unknown"
+
+        country_lower = str(country).strip().lower()
+
+        if country_lower == "" or country_lower == "far away...":
+            return "unknown"
+
+        if country_lower in ["usa", "united states", "united state"]:
+            return "usa"
+
+        if country_lower in ["phillipines", "philippines"]:
+            return "philippines"
+
+        return country_lower
+
     def _load_ratings(self) -> pd.DataFrame:
         ratings_file = self.dataset_path / "book_ratings.dat"
 
@@ -73,15 +91,15 @@ class BookCrossingLoader(BaseDatasetLoader):
 
                         if len(location_parts) >= 3:
                             country = location_parts[-1]
-                            countries.append(country)
                         elif len(location_parts) == 2:
                             country = location_parts[1]
-                            countries.append(country)
                         elif len(location_parts) == 1:
                             country = location_parts[0]
-                            countries.append(country)
                         else:
-                            countries.append("unknown")
+                            country = "unknown"
+
+                        country = self._clean_country(country)
+                        countries.append(country)
 
             except Exception:
                 countries = ["unknown"] * len(users_stats)
