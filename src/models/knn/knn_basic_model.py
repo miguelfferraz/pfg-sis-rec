@@ -4,7 +4,10 @@ from src.models.base_model import BaseModel
 
 
 class KNNBasicModel(BaseModel):
-    """Basic KNN using similarity between users or items."""
+    """
+    Basic KNN using similarity between users or items.
+    This model is a simple KNN model that uses the cosine similarity between users or items to predict the ratings.
+    """
 
     def __init__(self, **params):
         default_params = {

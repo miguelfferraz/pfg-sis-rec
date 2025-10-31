@@ -4,6 +4,11 @@ from src.models.base_model import BaseModel
 
 
 class BaselineOnlyModel(BaseModel):
+    """
+    BaselineOnly - Baseline only model.
+    This model is a simple baseline model that predicts the mean rating for each user.
+    """
+
     def __init__(self, **params):
         default_params = {"bsl_options": {"method": "als", "n_epochs": 10, "reg_u": 15, "reg_i": 10}}
         default_params.update(params)

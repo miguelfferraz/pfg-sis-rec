@@ -4,7 +4,10 @@ from src.models.base_model import BaseModel
 
 
 class KNNWithZScoreModel(BaseModel):
-    """KNN that normalizes ratings using z-score."""
+    """
+    KNN that normalizes ratings using z-score.
+    Z-score normalization is a technique that scales the ratings to have a mean of 0 and a standard deviation of 1.
+    """
 
     def __init__(self, **params):
         default_params = {"k": 40, "min_k": 1, "sim_options": {"name": "cosine", "user_based": True}}

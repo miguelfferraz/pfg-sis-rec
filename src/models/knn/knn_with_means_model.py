@@ -4,7 +4,10 @@ from src.models.base_model import BaseModel
 
 
 class KNNWithMeansModel(BaseModel):
-    """KNN that considers the average of user ratings."""
+    """
+    KNN that considers the average of user ratings.
+    This model is a simple KNN model that uses the average of user ratings to predict the ratings.
+    """
 
     def __init__(self, **params):
         default_params = {"k": 40, "min_k": 1, "sim_options": {"name": "cosine", "user_based": True}}

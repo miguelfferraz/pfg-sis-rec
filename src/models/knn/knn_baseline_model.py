@@ -4,7 +4,11 @@ from src.models.base_model import BaseModel
 
 
 class KNNBaselineModel(BaseModel):
-    """KNN that considers user and item baselines."""
+    """
+    KNN that considers user and item baselines.
+    This model is a combination of KNNBasic and BaselineOnly.
+    It uses the KNNBasic model to find the nearest neighbors and the BaselineOnly model to predict the ratings.
+    """
 
     def __init__(self, **params):
         default_params = {

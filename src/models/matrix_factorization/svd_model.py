@@ -4,6 +4,12 @@ from src.models.base_model import BaseModel
 
 
 class SVDModel(BaseModel):
+    """
+    SVD (Singular Value Decomposition) - Matrix factorization model.
+    Decomposes the user-item interaction matrix into three matrices:
+    U (user factors), V (item factors), and Σ (singular values).
+    """
+
     def __init__(self, **params):
         default_params = {"n_factors": 100, "n_epochs": 20, "lr_all": 0.005, "reg_all": 0.02, "biased": True}
         default_params.update(params)
