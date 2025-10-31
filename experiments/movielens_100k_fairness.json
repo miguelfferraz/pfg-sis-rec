@@ -100,7 +100,7 @@
         ],
         "item_attributes": [
             {
-                "name": "genre",
+                "name": "primary_genre",
                 "type": "categorical"
             }
         ],
