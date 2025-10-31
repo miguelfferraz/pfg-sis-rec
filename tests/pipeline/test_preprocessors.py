@@ -3,6 +3,7 @@ import pytest
 
 from src.preprocessors.min_ratings_filter import MinRatingsFilter
 from src.preprocessors.rating_normalizer import RatingNormalizer
+from src.preprocessors.rating_scaler import RatingScaler
 
 
 class TestPreprocessors:
@@ -82,3 +83,34 @@ class TestPreprocessors:
 
         mean = normalized_ratings["rating"].mean()
         assert abs(mean) < 1e-10
+
+    def test_rating_scaler_10_to_5(self, sample_users_df, sample_items_df):
+        ratings_df = pd.DataFrame(
+            {"user_id": [1, 2, 3, 4, 5], "item_id": [1, 2, 3, 4, 5], "rating": [0.0, 2.5, 5.0, 7.5, 10.0]}
+        )
+
+        scaler = RatingScaler({"from_min": 0, "from_max": 10, "to_min": 1, "to_max": 5})
+        scaled_ratings, _, _ = scaler.process(ratings_df, sample_users_df, sample_items_df)
+
+        expected = [1.0, 2.0, 3.0, 4.0, 5.0]
+        for i, exp in enumerate(expected):
+            assert abs(scaled_ratings.iloc[i]["rating"] - exp) < 1e-10
+
+    def test_rating_scaler_1_to_10_to_1_to_5(self, sample_users_df, sample_items_df):
+        ratings_df = pd.DataFrame(
+            {"user_id": [1, 2, 3, 4, 5], "item_id": [1, 2, 3, 4, 5], "rating": [1.0, 3.25, 5.5, 7.75, 10.0]}
+        )
+
+        scaler = RatingScaler({"from_min": 1, "from_max": 10, "to_min": 1, "to_max": 5})
+        scaled_ratings, _, _ = scaler.process(ratings_df, sample_users_df, sample_items_df)
+
+        expected = [1.0, 2.0, 3.0, 4.0, 5.0]
+        for i, exp in enumerate(expected):
+            assert abs(scaled_ratings.iloc[i]["rating"] - exp) < 1e-10
+
+    def test_rating_scaler_preserves_dataframes(self, sample_ratings_df, sample_users_df, sample_items_df):
+        scaler = RatingScaler({"from_min": 1, "from_max": 5, "to_min": 0, "to_max": 10})
+        _, users, items = scaler.process(sample_ratings_df, sample_users_df, sample_items_df)
+
+        pd.testing.assert_frame_equal(users, sample_users_df)
+        pd.testing.assert_frame_equal(items, sample_items_df)

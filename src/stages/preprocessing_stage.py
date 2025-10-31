@@ -2,11 +2,16 @@ from typing import Any, Dict
 
 from src.preprocessors.min_ratings_filter import MinRatingsFilter
 from src.preprocessors.rating_normalizer import RatingNormalizer
+from src.preprocessors.rating_scaler import RatingScaler
 from src.stages.base_stage import BaseStage
 
 
 class PreprocessingStage(BaseStage):
-    PREPROCESSOR_MAP = {"min_ratings_filter": MinRatingsFilter, "rating_normalizer": RatingNormalizer}
+    PREPROCESSOR_MAP = {
+        "min_ratings_filter": MinRatingsFilter,
+        "rating_normalizer": RatingNormalizer,
+        "rating_scaler": RatingScaler,
+    }
 
     def execute(self, context: Dict[str, Any]) -> Dict[str, Any]:
         ratings_df = context["ratings_df"]
