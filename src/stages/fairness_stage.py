@@ -114,7 +114,14 @@ class FairnessStage(BaseStage):
             return pd.DataFrame()
 
         merge_columns = [id_column, group_column]
-        predictions_with_groups = predictions_df.merge(entity_with_groups[merge_columns], on=id_column, how="left")
+        
+        predictions_copy = predictions_df.copy()
+        entity_copy = entity_with_groups[merge_columns].copy()
+        
+        predictions_copy[id_column] = predictions_copy[id_column].astype(str)
+        entity_copy[id_column] = entity_copy[id_column].astype(str)
+        
+        predictions_with_groups = predictions_copy.merge(entity_copy, on=id_column, how="left")
 
         return predictions_with_groups
 

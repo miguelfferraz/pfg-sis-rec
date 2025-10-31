@@ -18,6 +18,11 @@ from fairlearn.metrics import (
 from sklearn.metrics import recall_score
 
 
+def _recall_score_safe(y_true, y_pred):
+    """Wrapper for recall_score with zero_division=0 to avoid warnings."""
+    return recall_score(y_true, y_pred, zero_division=0)
+
+
 class FairnessCalculator:
     def __init__(self, positive_threshold: float = 4.0):
         self.positive_threshold = positive_threshold
@@ -76,7 +81,7 @@ class FairnessCalculator:
     ) -> MetricFrame:
         return MetricFrame(
             metrics={
-                "tpr": recall_score,
+                "tpr": _recall_score_safe,
                 "tnr": true_negative_rate,
                 "fpr": false_positive_rate,
                 "fnr": false_negative_rate,
@@ -186,7 +191,11 @@ class FairnessCalculator:
                     values.append(group_data["accuracy_metrics"][metric])
 
             if len(values) >= 2:
-                disparities[metric] = {"ratio": max(values) / min(values), "difference": max(values) - min(values)}
+                min_val = min(values)
+                max_val = max(values)
+                ratio = max_val / min_val if min_val > 0 else None
+                difference = max_val - min_val
+                disparities[metric] = {"ratio": ratio, "difference": difference}
             else:
                 disparities[metric] = {"ratio": None, "difference": None}
 
