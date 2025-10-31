@@ -22,4 +22,3 @@ class RatingNormalizer(BasePreprocessor):
                 normalized_ratings["rating"] = (normalized_ratings["rating"] - min_val) / (max_val - min_val)
 
         return normalized_ratings, users_df, items_df
-

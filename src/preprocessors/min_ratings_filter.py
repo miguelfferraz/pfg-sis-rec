@@ -29,4 +29,3 @@ class MinRatingsFilter(BasePreprocessor):
         filtered_items = items_df[items_df["item_id"].isin(valid_item_ids)]
 
         return filtered_ratings, filtered_users, filtered_items
-
