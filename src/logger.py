@@ -13,16 +13,16 @@ class Logger:
 
     def stage_start(self, stage_name: str):
         if self.enabled:
-            print(f"\n{'='*60}")
+            print(f"\n{'='*60}")  # noqa: E226
             print(f"[STAGE] Starting: {stage_name}")
-            print(f"{'='*60}")
+            print(f"{'='*60}")  # noqa: E226
             self.stage_start_time = time.time()
 
     def stage_end(self, stage_name: str):
         if self.enabled and self.stage_start_time:
             elapsed = time.time() - self.stage_start_time
             print(f"[STAGE] Completed: {stage_name} ({elapsed:.2f}s)")
-            print(f"{'='*60}\n")
+            print(f"{'='*60}\n")  # noqa: E226
             self.stage_start_time = None
 
     def warning(self, message: str):
@@ -32,4 +32,3 @@ class Logger:
     def error(self, message: str):
         if self.enabled:
             print(f"[ERROR] {message}")
-

@@ -71,7 +71,6 @@ class FairnessCalculator:
 
         return {"mse": float(mse), "rmse": float(rmse), "mae": float(mae)}
 
-
     def _build_metric_frame(
         self, y_true_binary: np.ndarray, y_pred_binary: np.ndarray, sensitive_features: np.ndarray
     ) -> MetricFrame:

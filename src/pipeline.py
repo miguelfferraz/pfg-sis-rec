@@ -34,9 +34,9 @@ class Pipeline:
 
     def run(self) -> Dict[str, Any]:
         self.logger.info("Starting pipeline execution")
-        
+
         self.context["logger"] = self.logger
-        
+
         self.logger.stage_start("Dataset Loading")
         self._load_dataset()
         self.logger.stage_end("Dataset Loading")
@@ -55,7 +55,7 @@ class Pipeline:
         dataset_name = dataset_config.get("name")
 
         self.logger.info(f"Loading dataset: {dataset_name}")
-        
+
         factory = LoaderFactory()
         loader = factory.create_loader(dataset_name)
 

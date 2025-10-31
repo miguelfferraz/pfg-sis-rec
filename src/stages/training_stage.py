@@ -43,7 +43,7 @@ class TrainingStage(BaseStage):
             model = ModelFactory.create_model(model_name, **model_params)
 
             start_time = time.time()
-            
+
             if validation_config.get("type") == "cross_validate":
                 predictions, results = self._cross_validate(model, dataset, validation_config, model_name, logger)
             elif validation_config.get("type") == "train_test_split":
@@ -88,7 +88,7 @@ class TrainingStage(BaseStage):
         kf = KFold(n_splits=cv)
         for trainset, testset in kf.split(dataset):
             fold_start = time.time()
-            
+
             model_instance = ModelFactory.create_model(model_name, **model.get_params())
             model_instance.fit(trainset)
             fold_predictions = model_instance.test(testset)
@@ -104,11 +104,11 @@ class TrainingStage(BaseStage):
                         "model_name": model_name,
                     }
                 )
-            
+
             if logger:
                 fold_time = time.time() - fold_start
                 logger.info(f"  Fold {fold + 1}/{cv} completed in {fold_time:.2f}s")
-            
+
             fold += 1
 
         results = {
