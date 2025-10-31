@@ -1,14 +1,12 @@
 import pandas as pd
 import pytest
 
-from src.loaders import create_loader
-
 
 class TestSensitiveVariables:
 
-    def test_movielens_users_sensitive_variables(self):
+    def test_movielens_users_sensitive_variables(self, loader_factory):
         try:
-            loader = create_loader("movielens")
+            loader = loader_factory.create_loader("movielens")
             users = loader.get_users()
 
             assert isinstance(users, pd.DataFrame)
@@ -31,9 +29,9 @@ class TestSensitiveVariables:
         except FileNotFoundError:
             pytest.skip("MovieLens dataset files not found")
 
-    def test_movielens_items_sensitive_variables(self):
+    def test_movielens_items_sensitive_variables(self, loader_factory):
         try:
-            loader = create_loader("movielens")
+            loader = loader_factory.create_loader("movielens")
             items = loader.get_items()
 
             assert isinstance(items, pd.DataFrame)
@@ -48,9 +46,9 @@ class TestSensitiveVariables:
         except FileNotFoundError:
             pytest.skip("MovieLens dataset files not found")
 
-    def test_mappings_consistency(self):
+    def test_mappings_consistency(self, loader_factory):
         try:
-            loader = create_loader("movielens")
+            loader = loader_factory.create_loader("movielens")
             users = loader.get_users()
 
             user_mappings = loader.get_user_mappings()
@@ -66,9 +64,9 @@ class TestSensitiveVariables:
         except FileNotFoundError:
             pytest.skip("MovieLens dataset files not found")
 
-    def test_decode_invalid_variable(self):
+    def test_decode_invalid_variable(self, loader_factory):
         try:
-            loader = create_loader("movielens")
+            loader = loader_factory.create_loader("movielens")
             loader.get_users()
 
             result = loader.decode_user_variable("invalid_var", 0)
@@ -80,9 +78,9 @@ class TestSensitiveVariables:
         except FileNotFoundError:
             pytest.skip("MovieLens dataset files not found")
 
-    def test_movielens1m_users_sensitive_variables(self):
+    def test_movielens1m_users_sensitive_variables(self, loader_factory):
         try:
-            loader = create_loader("movielens1m")
+            loader = loader_factory.create_loader("movielens1m")
             users = loader.get_users()
 
             assert isinstance(users, pd.DataFrame)
@@ -105,9 +103,9 @@ class TestSensitiveVariables:
         except FileNotFoundError:
             pytest.skip("MovieLens 1M dataset files not found")
 
-    def test_movielens1m_items_sensitive_variables(self):
+    def test_movielens1m_items_sensitive_variables(self, loader_factory):
         try:
-            loader = create_loader("movielens1m")
+            loader = loader_factory.create_loader("movielens1m")
             items = loader.get_items()
 
             assert isinstance(items, pd.DataFrame)
@@ -122,9 +120,9 @@ class TestSensitiveVariables:
         except FileNotFoundError:
             pytest.skip("MovieLens 1M dataset files not found")
 
-    def test_amazonmusic_users_sensitive_variables(self):
+    def test_amazonmusic_users_sensitive_variables(self, loader_factory):
         try:
-            loader = create_loader("amazonmusic")
+            loader = loader_factory.create_loader("amazonmusic")
             users = loader.get_users()
 
             assert isinstance(users, pd.DataFrame)
@@ -145,9 +143,9 @@ class TestSensitiveVariables:
         except FileNotFoundError:
             pytest.skip("Amazon Music dataset files not found")
 
-    def test_amazonmusic_items_sensitive_variables(self):
+    def test_amazonmusic_items_sensitive_variables(self, loader_factory):
         try:
-            loader = create_loader("amazonmusic")
+            loader = loader_factory.create_loader("amazonmusic")
             items = loader.get_items()
 
             assert isinstance(items, pd.DataFrame)
@@ -162,9 +160,9 @@ class TestSensitiveVariables:
         except FileNotFoundError:
             pytest.skip("Amazon Music dataset files not found")
 
-    def test_anime_users_sensitive_variables(self):
+    def test_anime_users_sensitive_variables(self, loader_factory):
         try:
-            loader = create_loader("anime")
+            loader = loader_factory.create_loader("anime")
             users = loader.get_users()
 
             assert isinstance(users, pd.DataFrame)
@@ -185,9 +183,9 @@ class TestSensitiveVariables:
         except FileNotFoundError:
             pytest.skip("Anime dataset files not found")
 
-    def test_anime_items_sensitive_variables(self):
+    def test_anime_items_sensitive_variables(self, loader_factory):
         try:
-            loader = create_loader("anime")
+            loader = loader_factory.create_loader("anime")
             items = loader.get_items()
 
             assert isinstance(items, pd.DataFrame)
@@ -208,9 +206,9 @@ class TestSensitiveVariables:
         except FileNotFoundError:
             pytest.skip("Anime dataset files not found")
 
-    def test_bookcrossing_users_sensitive_variables(self):
+    def test_bookcrossing_users_sensitive_variables(self, loader_factory):
         try:
-            loader = create_loader("bookcrossing")
+            loader = loader_factory.create_loader("bookcrossing")
             users = loader.get_users()
 
             assert isinstance(users, pd.DataFrame)
@@ -233,9 +231,9 @@ class TestSensitiveVariables:
         except FileNotFoundError:
             pytest.skip("BookCrossing dataset files not found")
 
-    def test_bookcrossing_items_sensitive_variables(self):
+    def test_bookcrossing_items_sensitive_variables(self, loader_factory):
         try:
-            loader = create_loader("bookcrossing")
+            loader = loader_factory.create_loader("bookcrossing")
             items = loader.get_items()
 
             assert isinstance(items, pd.DataFrame)

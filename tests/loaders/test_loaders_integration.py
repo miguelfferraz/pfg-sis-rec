@@ -4,8 +4,6 @@ import pandas as pd
 import pytest
 from surprise import Dataset
 
-from src.loaders import create_loader
-
 from .conftest import assert_basic_dataframe_structure, assert_loader_basic_functionality
 
 
@@ -41,14 +39,14 @@ class TestLoadersIntegration:
         ratings2 = safe_loader.get_ratings()
         assert ratings1 is ratings2
 
-    def test_create_loader_invalid_dataset(self):
+    def test_create_loader_invalid_dataset(self, loader_factory):
         with pytest.raises(ValueError, match="Dataset 'invalid' not supported"):
-            create_loader("invalid")
+            loader_factory.create_loader("invalid")
 
     @pytest.mark.parametrize("dataset_name", ["MOVIELENS", "movielens", "MovieLens"])
-    def test_create_loader_case_insensitive(self, dataset_name):
-        loader1 = create_loader(dataset_name.upper())
-        loader2 = create_loader(dataset_name.lower())
+    def test_create_loader_case_insensitive(self, dataset_name, loader_factory):
+        loader1 = loader_factory.create_loader(dataset_name.upper())
+        loader2 = loader_factory.create_loader(dataset_name.lower())
         assert type(loader1) == type(loader2)
 
     def test_base_loader_invalid_path(self, movielens_loader_class):
@@ -69,9 +67,9 @@ class TestLoadersIntegration:
     def test_consistent_dataframe_structure(self, safe_loader):
         assert_loader_basic_functionality(safe_loader)
 
-    def test_independent_loader_instances(self, dataset_name):
-        loader1 = create_loader(dataset_name)
-        loader2 = create_loader(dataset_name)
+    def test_independent_loader_instances(self, dataset_name, loader_factory):
+        loader1 = loader_factory.create_loader(dataset_name)
+        loader2 = loader_factory.create_loader(dataset_name)
 
         users1 = loader1.get_users()
         users2 = loader2.get_users()

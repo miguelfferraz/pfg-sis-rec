@@ -5,8 +5,13 @@ from typing import Generator
 import pandas as pd
 import pytest
 
-from src.loaders import create_loader
 from src.loaders.base_loader import BaseDatasetLoader
+from src.loaders.loader_factory import LoaderFactory
+
+
+@pytest.fixture
+def loader_factory():
+    return LoaderFactory()
 
 
 @pytest.fixture(params=["movielens", "movielens1m", "amazonmusic", "anime", "bookcrossing"])
@@ -15,9 +20,9 @@ def dataset_name(request):
 
 
 @pytest.fixture
-def safe_loader(dataset_name):
+def safe_loader(dataset_name, loader_factory):
     try:
-        return create_loader(dataset_name)
+        return loader_factory.create_loader(dataset_name)
     except FileNotFoundError:
         pytest.skip(f"Dataset {dataset_name} files not found")
 
