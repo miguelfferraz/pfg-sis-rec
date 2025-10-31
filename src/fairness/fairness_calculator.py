@@ -68,27 +68,9 @@ class FairnessCalculator:
         mse = np.mean((y_true - y_pred) ** 2)
         rmse = np.sqrt(mse)
         mae = np.mean(np.abs(y_true - y_pred))
-        fcp = self._calculate_fcp(y_true, y_pred)
 
-        return {"mse": float(mse), "rmse": float(rmse), "mae": float(mae), "fcp": float(fcp)}
+        return {"mse": float(mse), "rmse": float(rmse), "mae": float(mae)}
 
-    def _calculate_fcp(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
-        concordant = 0
-        discordant = 0
-
-        for i in range(len(y_true)):
-            for j in range(i + 1, len(y_true)):
-                if (y_true[i] > y_true[j] and y_pred[i] > y_pred[j]) or (
-                    y_true[i] < y_true[j] and y_pred[i] < y_pred[j]
-                ):
-                    concordant += 1
-                elif (y_true[i] > y_true[j] and y_pred[i] < y_pred[j]) or (
-                    y_true[i] < y_true[j] and y_pred[i] > y_pred[j]
-                ):
-                    discordant += 1
-
-        total_pairs = concordant + discordant
-        return concordant / total_pairs if total_pairs > 0 else 0.0
 
     def _build_metric_frame(
         self, y_true_binary: np.ndarray, y_pred_binary: np.ndarray, sensitive_features: np.ndarray
@@ -197,7 +179,7 @@ class FairnessCalculator:
     def _calculate_disparities(self, groups: Dict[str, Any]) -> Dict[str, Any]:
         disparities = {}
 
-        metrics_to_check = ["mse", "rmse", "mae", "fcp"]
+        metrics_to_check = ["mse", "rmse", "mae"]
         for metric in metrics_to_check:
             values = []
             for group_data in groups.values():
@@ -250,7 +232,7 @@ class FairnessCalculator:
 
     def _aggregate_group_metrics(self, fold_results: List[Dict[str, Any]], group_label: str) -> Dict[str, Any]:
         counts = []
-        accuracy_metrics = {"rmse": [], "mae": [], "fcp": []}
+        accuracy_metrics = {"mse": [], "rmse": [], "mae": []}
         classification_metrics = {"tpr": [], "tnr": [], "fpr": [], "fnr": []}
 
         for fold_result in fold_results:
@@ -335,7 +317,7 @@ class FairnessCalculator:
     def _aggregate_disparities(self, fold_results: List[Dict[str, Any]]) -> Dict[str, Any]:
         aggregated = {}
 
-        metrics = ["rmse", "mae", "fcp"]
+        metrics = ["mse", "rmse", "mae"]
         for metric in metrics:
             ratios = []
             differences = []

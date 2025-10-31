@@ -4,7 +4,7 @@ import pytest
 from src.loaders.loader_factory import LoaderFactory
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def movielens_loader():
     factory = LoaderFactory()
     return factory.create_loader("movielens")
