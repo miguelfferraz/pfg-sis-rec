@@ -30,31 +30,29 @@ class BookCrossingLoader(BaseDatasetLoader):
         if self._ratings_df is None:
             self._ratings_df = self._load_ratings()
 
-        users_from_ratings = (
+        users_stats = (
             self._ratings_df.groupby("user_id").agg({"rating": ["count", "mean"], "item_id": "nunique"}).reset_index()
         )
 
-        users_data = []
-        for _, row in users_from_ratings.iterrows():
-            user_data = {
-                "user_id": row["user_id"],
-                "total_ratings": row[("rating", "count")],
-                "avg_rating": row[("rating", "mean")],
-                "unique_items_rated": row[("item_id", "nunique")],
-            }
-            users_data.append(user_data)
+        users_stats.columns = ["user_id", "total_ratings", "avg_rating", "unique_items_rated"]
 
-        users_df = pd.DataFrame(users_data)
+        countries = []
 
         if users_file.exists():
             try:
-                users_info_df = pd.read_csv(
-                    users_file,
-                    sep=r"\s+",
-                    encoding="utf-8",
-                    on_bad_lines="skip",
-                    engine="python",
-                )
+                rows = []
+                with open(users_file, "r", encoding="utf-8") as f:
+                    header = f.readline().strip().split("\t")
+
+                    for line in f:
+                        parts = line.strip().split("\t")
+                        while len(parts) > 3 and parts[-1] == "":
+                            parts.pop()
+
+                        if len(parts) >= 3:
+                            rows.append(parts[:3])
+
+                users_info_df = pd.DataFrame(rows, columns=["User-ID", "Location", "Age"])
 
                 if "User-ID" in users_info_df.columns:
                     users_info_df["User-ID"] = pd.to_numeric(users_info_df["User-ID"], errors="coerce").astype("Int32")
@@ -63,9 +61,32 @@ class BookCrossingLoader(BaseDatasetLoader):
                 if "Age" in users_info_df.columns:
                     users_info_df["Age"] = pd.to_numeric(users_info_df["Age"], errors="coerce")
 
-                users_df = users_df.merge(users_info_df, on="user_id", how="left")
+                users_stats = users_stats.merge(users_info_df, on="user_id", how="left")
+
+                for _, row in users_stats.iterrows():
+                    location = row.get("Location", "")
+                    if pd.isna(location) or location == "":
+                        countries.append("unknown")
+                    else:
+                        location_parts = str(location).split(",")
+                        location_parts = [part.strip() for part in location_parts]
+
+                        if len(location_parts) >= 3:
+                            country = location_parts[-1]
+                            countries.append(country)
+                        elif len(location_parts) == 2:
+                            country = location_parts[1]
+                            countries.append(country)
+                        elif len(location_parts) == 1:
+                            country = location_parts[0]
+                            countries.append(country)
+                        else:
+                            countries.append("unknown")
+
             except Exception:
-                pass
+                countries = ["unknown"] * len(users_stats)
+        else:
+            countries = ["unknown"] * len(users_stats)
 
         if history_file.exists():
             try:
@@ -79,39 +100,113 @@ class BookCrossingLoader(BaseDatasetLoader):
                 )
                 history_stats.columns = ["user_id", "total_accessed", "unique_items_accessed"]
 
-                users_df = users_df.merge(history_stats, on="user_id", how="left")
+                users_stats = users_stats.merge(history_stats, on="user_id", how="left")
+                users_stats["total_accessed"] = users_stats["total_accessed"].fillna(0)
+                users_stats["unique_items_accessed"] = users_stats["unique_items_accessed"].fillna(0)
             except Exception:
-                pass
+                users_stats["total_accessed"] = 0
+                users_stats["unique_items_accessed"] = 0
+
+        activity_bins = [0, 5, 15, 50, float("inf")]
+        activity_labels = ["low", "medium", "high", "very_high"]
+        users_stats["activity_level"] = pd.cut(
+            users_stats["total_ratings"], bins=activity_bins, labels=activity_labels, include_lowest=True
+        )
+
+        rating_bins = [0, 6.0, 7.5, 8.5, 10.0]
+        rating_labels = ["critical", "moderate", "positive", "very_positive"]
+        users_stats["rating_behavior"] = pd.cut(
+            users_stats["avg_rating"], bins=rating_bins, labels=rating_labels, include_lowest=True
+        )
+
+        country_encoded = self._create_categorical_mapping(pd.Series(countries), "country", self.user_mappings)
+        activity_encoded = self._create_categorical_mapping(
+            users_stats["activity_level"].astype(str), "activity_level", self.user_mappings
+        )
+        rating_behavior_encoded = self._create_categorical_mapping(
+            users_stats["rating_behavior"].astype(str), "rating_behavior", self.user_mappings
+        )
+
+        users_df = pd.DataFrame(
+            {
+                "user_id": users_stats["user_id"],
+                "country": country_encoded,
+                "age": users_stats.get("Age", pd.Series([None] * len(users_stats))).fillna(0),
+                "activity_level": activity_encoded,
+                "rating_behavior": rating_behavior_encoded,
+            }
+        )
 
         return users_df
 
     def _load_items(self) -> pd.DataFrame:
         info_file = self.dataset_path / "items_info.dat"
 
-        if self._ratings_df is None:
-            self._ratings_df = self._load_ratings()
+        if not info_file.exists():
+            return pd.DataFrame(columns=["item_id"])
 
-        items_from_ratings = (
-            self._ratings_df.groupby("item_id").agg({"rating": ["count", "mean"], "user_id": "nunique"}).reset_index()
-        )
+        try:
+            rows = []
+            with open(info_file, "r", encoding="utf-8", errors="ignore") as f:
+                header = f.readline().strip().split("\t")
 
-        items_data = []
-        for _, row in items_from_ratings.iterrows():
-            item_data = {
-                "item_id": row["item_id"],
-                "total_ratings": row[("rating", "count")],
-                "avg_rating": row[("rating", "mean")],
-                "unique_users": row[("user_id", "nunique")],
-            }
-            items_data.append(item_data)
+                for line in f:
+                    parts = line.strip().split("\t")
 
-        items_df = pd.DataFrame(items_data)
+                    if len(parts) > len(header):
+                        fixed_parts = parts[:5]
 
-        if info_file.exists():
-            try:
-                metadata_df = pd.read_csv(info_file, sep="\t", encoding="utf-8", on_bad_lines="skip")
-                items_df = items_df.merge(metadata_df, on="item_id", how="left")
-            except Exception:
-                pass
+                        publisher_parts = parts[5 : len(parts) - 3]
+                        publisher = " ".join(publisher_parts) if publisher_parts else ""
+                        fixed_parts.append(publisher)
 
-        return items_df
+                        fixed_parts.extend(parts[-3:])
+                        parts = fixed_parts
+
+                    while len(parts) < len(header):
+                        parts.append("")
+
+                    rows.append(parts[: len(header)])
+
+            metadata_df = pd.DataFrame(rows, columns=header)
+
+            if "Book_ID" in metadata_df.columns:
+                metadata_df = metadata_df.rename(columns={"Book_ID": "item_id"})
+
+            publication_years = []
+            publication_counts = []
+
+            publisher_counts = {}
+            if "Publisher" in metadata_df.columns:
+                publisher_counts = metadata_df["Publisher"].value_counts().to_dict()
+
+            for _, row in metadata_df.iterrows():
+                year = row.get("Year-Of-Publication", None)
+                if pd.isna(year) or year is None:
+                    publication_years.append(0)
+                else:
+                    try:
+                        year_int = int(year)
+                        publication_years.append(year_int)
+                    except:
+                        publication_years.append(0)
+
+                publisher = row.get("Publisher", "")
+                if pd.isna(publisher) or publisher == "":
+                    publication_counts.append(0)
+                else:
+                    publisher_count = publisher_counts.get(publisher, 0)
+                    publication_counts.append(publisher_count)
+
+            items_df = pd.DataFrame(
+                {
+                    "item_id": metadata_df["item_id"],
+                    "publication_year": publication_years,
+                    "publisher_book_count": publication_counts,
+                }
+            )
+
+            return items_df
+
+        except Exception:
+            return pd.DataFrame(columns=["item_id"])

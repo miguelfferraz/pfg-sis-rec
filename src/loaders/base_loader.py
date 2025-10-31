@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import pandas as pd
 from surprise import Dataset, Reader
@@ -15,11 +15,20 @@ class BaseDatasetLoader(ABC):
         self._users_df: Optional[pd.DataFrame] = None
         self._items_df: Optional[pd.DataFrame] = None
         self._surprise_dataset: Optional[Dataset] = None
+        self.user_mappings: Dict[str, Dict[Any, int]] = {}
+        self.item_mappings: Dict[str, Dict[Any, int]] = {}
         self._validate_path()
 
     def _validate_path(self) -> None:
         if not self.dataset_path.exists():
             raise FileNotFoundError(f"Dataset path not found: {self.dataset_path}")
+
+    def _create_categorical_mapping(
+        self, series: pd.Series, variable_name: str, mapping_dict: Dict[str, Dict[Any, int]]
+    ) -> pd.Series:
+        unique_values = series.unique()
+        mapping_dict[variable_name] = {val: idx for idx, val in enumerate(unique_values)}
+        return series.map(mapping_dict[variable_name])
 
     @abstractmethod
     def _load_ratings(self) -> pd.DataFrame:
@@ -58,3 +67,23 @@ class BaseDatasetLoader(ABC):
         if self._items_df is None:
             self._items_df = self._load_items()
         return self._items_df
+
+    def get_user_mappings(self) -> Dict[str, Dict[Any, int]]:
+        return self.user_mappings.copy()
+
+    def get_item_mappings(self) -> Dict[str, Dict[Any, int]]:
+        return self.item_mappings.copy()
+
+    def decode_user_variable(self, variable_name: str, encoded_value: int) -> Any:
+        if variable_name not in self.user_mappings:
+            return encoded_value
+
+        reverse_mapping = {v: k for k, v in self.user_mappings[variable_name].items()}
+        return reverse_mapping.get(encoded_value, encoded_value)
+
+    def decode_item_variable(self, variable_name: str, encoded_value: int) -> Any:
+        if variable_name not in self.item_mappings:
+            return encoded_value
+
+        reverse_mapping = {v: k for k, v in self.item_mappings[variable_name].items()}
+        return reverse_mapping.get(encoded_value, encoded_value)

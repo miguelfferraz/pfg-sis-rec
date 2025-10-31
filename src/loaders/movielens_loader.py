@@ -28,74 +28,76 @@ class MovieLensLoader(BaseDatasetLoader):
     def _load_users(self) -> pd.DataFrame:
         users_file = self.dataset_path / "u.user"
 
-        if self._ratings_df is None:
-            self._ratings_df = self._load_ratings()
+        if not users_file.exists():
+            return pd.DataFrame(columns=["user_id"])
 
-        users_from_ratings = (
-            self._ratings_df.groupby("user_id")
-            .agg({"rating": ["count", "mean"], "item_id": "nunique", "timestamp": ["min", "max"]})
-            .reset_index()
-        )
+        try:
+            demographics_df = pd.read_csv(
+                users_file,
+                sep="|",
+                header=None,
+                names=["user_id", "age", "gender", "occupation", "zip_code"],
+                dtype={"user_id": "int32", "age": "int32", "gender": "str", "occupation": "str", "zip_code": "str"},
+            )
 
-        users_data = []
-        for _, row in users_from_ratings.iterrows():
-            user_data = {
-                "user_id": row["user_id"],
-                "total_ratings": row[("rating", "count")],
-                "avg_rating": row[("rating", "mean")],
-                "unique_items_rated": row[("item_id", "nunique")],
-                "first_rating": row[("timestamp", "min")],
-                "last_rating": row[("timestamp", "max")],
-            }
-            users_data.append(user_data)
+            gender_encoded = self._create_categorical_mapping(demographics_df["gender"], "gender", self.user_mappings)
+            occupation_encoded = self._create_categorical_mapping(
+                demographics_df["occupation"], "occupation", self.user_mappings
+            )
 
-        users_df = pd.DataFrame(users_data)
+            users_df = pd.DataFrame(
+                {
+                    "user_id": demographics_df["user_id"],
+                    "gender": gender_encoded,
+                    "age": demographics_df["age"],
+                    "occupation": occupation_encoded,
+                }
+            )
 
-        if users_file.exists():
-            try:
-                demographics_df = pd.read_csv(
-                    users_file,
-                    sep="|",
-                    header=None,
-                    names=["user_id", "age", "gender", "occupation", "zip_code"],
-                    dtype={"user_id": "int32", "age": "int32", "gender": "str", "occupation": "str", "zip_code": "str"},
-                )
-                users_df = users_df.merge(demographics_df, on="user_id", how="left")
-            except Exception:
-                pass
+            return users_df
 
-        return users_df
+        except Exception:
+            return pd.DataFrame(columns=["user_id"])
 
     def _load_items(self) -> pd.DataFrame:
         movies_file = self.dataset_path / "u.item"
+        genre_file = self.dataset_path / "u.genre"
 
-        if self._ratings_df is None:
-            self._ratings_df = self._load_ratings()
+        if not movies_file.exists():
+            return pd.DataFrame(columns=["item_id"])
 
-        items_from_ratings = (
-            self._ratings_df.groupby("item_id").agg({"rating": ["count", "mean"], "user_id": "nunique"}).reset_index()
-        )
+        try:
+            genre_names = []
+            if genre_file.exists():
+                with open(genre_file, "r") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and "|" in line:
+                            genre_name = line.split("|")[0]
+                            if genre_name != "unknown":
+                                genre_names.append(genre_name)
 
-        items_data = []
-        for _, row in items_from_ratings.iterrows():
-            item_data = {
-                "item_id": row["item_id"],
-                "total_ratings": row[("rating", "count")],
-                "avg_rating": row[("rating", "mean")],
-                "unique_users": row[("user_id", "nunique")],
-            }
-            items_data.append(item_data)
+            movies_df = pd.read_csv(movies_file, sep="|", header=None, encoding="latin-1", on_bad_lines="skip")
 
-        items_df = pd.DataFrame(items_data)
+            if len(movies_df.columns) < 6:
+                return pd.DataFrame(columns=["item_id"])
 
-        if movies_file.exists():
-            try:
-                metadata_df = pd.read_csv(movies_file, sep="|", header=None, encoding="latin-1", on_bad_lines="skip")
+            genre_columns = movies_df.iloc[:, 5 : 5 + len(genre_names)]
 
-                if len(metadata_df.columns) >= 2:
-                    metadata_df = metadata_df.rename(columns={0: "item_id", 1: "title", 2: "release_date"})
-                    items_df = items_df.merge(metadata_df, on="item_id", how="left")
-            except Exception:
-                pass
+            primary_genres = []
+            for _, row in genre_columns.iterrows():
+                genre_indices = row[row == 1].index
+                if len(genre_indices) > 0:
+                    genre_idx = genre_indices[0] - 5
+                    primary_genres.append(genre_idx)
+                else:
+                    primary_genres.append(0)
 
-        return items_df
+            self.item_mappings["primary_genre"] = {i: i for i in range(len(genre_names) + 1)}
+
+            items_df = pd.DataFrame({"item_id": movies_df.iloc[:, 0], "primary_genre": primary_genres})
+
+            return items_df
+
+        except Exception:
+            return pd.DataFrame(columns=["item_id"])

@@ -29,116 +29,116 @@ class MovieLens1MLoader(BaseDatasetLoader):
     def _load_users(self) -> pd.DataFrame:
         users_file = self.dataset_path / "users.dat"
 
-        if self._ratings_df is None:
-            self._ratings_df = self._load_ratings()
+        if not users_file.exists():
+            return pd.DataFrame(columns=["user_id"])
 
-        users_from_ratings = (
-            self._ratings_df.groupby("user_id")
-            .agg({"rating": ["count", "mean"], "item_id": "nunique", "timestamp": ["min", "max"]})
-            .reset_index()
-        )
+        try:
+            demographics_df = pd.read_csv(
+                users_file,
+                sep="::",
+                header=None,
+                names=["user_id", "gender", "age", "occupation", "zip_code"],
+                dtype={
+                    "user_id": "int32",
+                    "gender": "str",
+                    "age": "int32",
+                    "occupation": "int32",
+                    "zip_code": "str",
+                },
+                engine="python",
+            )
 
-        users_data = []
-        for _, row in users_from_ratings.iterrows():
-            user_data = {
-                "user_id": row["user_id"],
-                "total_ratings": row[("rating", "count")],
-                "avg_rating": row[("rating", "mean")],
-                "unique_items_rated": row[("item_id", "nunique")],
-                "first_rating": row[("timestamp", "min")],
-                "last_rating": row[("timestamp", "max")],
+            occupation_map = {
+                0: "other",
+                1: "academic/educator",
+                2: "artist",
+                3: "clerical/admin",
+                4: "college/grad student",
+                5: "customer service",
+                6: "doctor/health care",
+                7: "executive/managerial",
+                8: "farmer",
+                9: "homemaker",
+                10: "K-12 student",
+                11: "lawyer",
+                12: "programmer",
+                13: "retired",
+                14: "sales/marketing",
+                15: "scientist",
+                16: "self-employed",
+                17: "technician/engineer",
+                18: "tradesman/craftsman",
+                19: "unemployed",
+                20: "writer",
             }
-            users_data.append(user_data)
 
-        users_df = pd.DataFrame(users_data)
+            demographics_df["occupation_name"] = demographics_df["occupation"].map(occupation_map)
 
-        if users_file.exists():
-            try:
-                demographics_df = pd.read_csv(
-                    users_file,
-                    sep="::",
-                    header=None,
-                    names=["user_id", "gender", "age", "occupation", "zip_code"],
-                    dtype={
-                        "user_id": "int32",
-                        "gender": "str",
-                        "age": "int32",
-                        "occupation": "int32",
-                        "zip_code": "str",
-                    },
-                    engine="python",
-                )
+            gender_encoded = self._create_categorical_mapping(demographics_df["gender"], "gender", self.user_mappings)
+            occupation_encoded = self._create_categorical_mapping(
+                demographics_df["occupation_name"], "occupation", self.user_mappings
+            )
 
-                occupation_map = {
-                    0: "other",
-                    1: "academic/educator",
-                    2: "artist",
-                    3: "clerical/admin",
-                    4: "college/grad student",
-                    5: "customer service",
-                    6: "doctor/health care",
-                    7: "executive/managerial",
-                    8: "farmer",
-                    9: "homemaker",
-                    10: "K-12 student",
-                    11: "lawyer",
-                    12: "programmer",
-                    13: "retired",
-                    14: "sales/marketing",
-                    15: "scientist",
-                    16: "self-employed",
-                    17: "technician/engineer",
-                    18: "tradesman/craftsman",
-                    19: "unemployed",
-                    20: "writer",
+            users_df = pd.DataFrame(
+                {
+                    "user_id": demographics_df["user_id"],
+                    "gender": gender_encoded,
+                    "age": demographics_df["age"],
+                    "occupation": occupation_encoded,
                 }
+            )
 
-                demographics_df["occupation_name"] = demographics_df["occupation"].map(occupation_map)
-                users_df = users_df.merge(demographics_df, on="user_id", how="left")
-            except Exception:
-                pass
+            return users_df
 
-        return users_df
+        except Exception:
+            return pd.DataFrame(columns=["user_id"])
 
     def _load_items(self) -> pd.DataFrame:
         movies_file = self.dataset_path / "movies.dat"
 
-        if self._ratings_df is None:
-            self._ratings_df = self._load_ratings()
+        if not movies_file.exists():
+            return pd.DataFrame(columns=["item_id"])
 
-        items_from_ratings = (
-            self._ratings_df.groupby("item_id").agg({"rating": ["count", "mean"], "user_id": "nunique"}).reset_index()
-        )
+        try:
+            metadata_df = pd.read_csv(
+                movies_file,
+                sep="::",
+                header=None,
+                encoding="latin-1",
+                on_bad_lines="skip",
+                engine="python",
+                names=["item_id", "title", "genres"],
+            )
 
-        items_data = []
-        for _, row in items_from_ratings.iterrows():
-            item_data = {
-                "item_id": row["item_id"],
-                "total_ratings": row[("rating", "count")],
-                "avg_rating": row[("rating", "mean")],
-                "unique_users": row[("user_id", "nunique")],
-            }
-            items_data.append(item_data)
+            if "genres" not in metadata_df.columns:
+                return pd.DataFrame(columns=["item_id"])
 
-        items_df = pd.DataFrame(items_data)
+            primary_genres = []
+            all_genres = set()
 
-        if movies_file.exists():
-            try:
-                metadata_df = pd.read_csv(
-                    movies_file,
-                    sep="::",
-                    header=None,
-                    encoding="latin-1",
-                    on_bad_lines="skip",
-                    engine="python",
-                    names=["item_id", "title", "genres"],
-                )
+            for genres_str in metadata_df["genres"]:
+                if pd.isna(genres_str) or genres_str == "":
+                    primary_genres.append("unknown")
+                else:
+                    genre_list = genres_str.split("|")
+                    primary_genre = genre_list[0] if genre_list else "unknown"
+                    primary_genres.append(primary_genre)
+                    all_genres.update(genre_list)
 
-                if "genres" in metadata_df.columns:
-                    metadata_df["genres_list"] = metadata_df["genres"].str.split("|")
+            unique_genres = sorted(list(all_genres))
+            if "unknown" not in unique_genres:
+                unique_genres.insert(0, "unknown")
 
-                items_df = items_df.merge(metadata_df, on="item_id", how="left")
-            except Exception:
-                pass
+            self.item_mappings["primary_genre"] = {genre: idx for idx, genre in enumerate(unique_genres)}
 
-        return items_df
+            items_df = pd.DataFrame(
+                {
+                    "item_id": metadata_df["item_id"],
+                    "primary_genre": [self.item_mappings["primary_genre"][genre] for genre in primary_genres],
+                }
+            )
+
+            return items_df
+
+        except Exception:
+            return pd.DataFrame(columns=["item_id"])
