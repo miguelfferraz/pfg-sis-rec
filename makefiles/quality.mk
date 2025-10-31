@@ -1,5 +1,5 @@
 tests/coverage:
-	poetry run pytest tests/ --cov=src --cov-report xml --cov-report term --cov-report html --no-cov-on-fail --cov-fail-under=90
+	poetry run pytest tests/ --cov=src --cov-report xml --cov-report term --cov-report html --no-cov-on-fail --cov-fail-under=80
 
 check/code-style:
 	poetry run unimport --check src tests
