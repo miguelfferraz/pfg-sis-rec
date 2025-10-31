@@ -116,7 +116,7 @@ def minimal_dataset_files(temp_dir, loader_info):
 
         items_file = temp_dir / "items_info.dat"
         items_file.write_text(
-            "Book_ID\tISBN\tBook-Title\tBook-Author\tYear-Of-Publication\tPublisher\tImage-URL-S\tImage-URL-M\tImage-URL-L\n1\t123456789\tTest Book 1\tTest Author 1\t2000\tTest Publisher\turl1\turl2\turl3\n2\t987654321\tTest Book 2\tTest Author 2\t2001\tTest Publisher\turl1\turl2\turl3\n"
+            "Book_ID\tISBN\tBook-Title\tBook-Author\tYear-Of-Publication\tPublisher\tImage-URL-S\tImage-URL-M\tImage-URL-L\n1\t123456789\tTest Book 1\tTest Author 1\t2000\tTest Publisher\turl1\turl2\turl3\n2\t987654321\tTest Book 2\tTest Author 2\t2001\tTest Publisher\turl1\turl2\turl3\n"  # noqa: E501
         )
 
     return main_file
@@ -189,6 +189,11 @@ def complete_test_loader_class():
     return CompleteTestLoader
 
 
+@pytest.fixture
+def dataset_sensitive_config(dataset_name):
+    return DATASET_SENSITIVE_VARIABLES.get(dataset_name, {})
+
+
 def assert_basic_dataframe_structure(df: pd.DataFrame, required_column: str):
     assert isinstance(df, pd.DataFrame)
     assert required_column in df.columns
@@ -206,3 +211,121 @@ def assert_loader_basic_functionality(loader: BaseDatasetLoader):
     assert_basic_dataframe_structure(users, "user_id")
     assert_basic_dataframe_structure(items, "item_id")
     assert isinstance(ratings, Dataset)
+
+
+def assert_sensitive_variables_structure(df: pd.DataFrame, config: dict, entity_type: str):
+    assert isinstance(df, pd.DataFrame)
+
+    for col in config.get("expected_columns", []):
+        assert col in df.columns, f"Column {col} not found in {entity_type}"
+
+    for col in config.get("categorical_columns", []):
+        if col in df.columns:
+            assert df[col].dtype in ["int32", "int64"], f"Column {col} should be integer type"
+
+    for col in config.get("numeric_columns", []):
+        if col in df.columns:
+            assert df[col].dtype in ["int32", "int64", "float32", "float64"], f"Column {col} should be numeric type"
+
+
+def assert_mappings_exist(loader: BaseDatasetLoader, config: dict, entity_type: str):
+    if entity_type == "users":
+        mappings = loader.get_user_mappings()
+    else:
+        mappings = loader.get_item_mappings()
+
+    for mapping_col in config.get("mappings", []):
+        assert mapping_col in mappings, f"Mapping for {mapping_col} not found in {entity_type}"
+
+
+def assert_decode_functionality(loader: BaseDatasetLoader, config: dict):
+    for var_name, encoded_val, expected in config.get("decode_tests", []):
+        result = loader.decode_user_variable(var_name, encoded_val)
+        if isinstance(expected, list):
+            assert result in expected, f"Decoded value {result} not in expected values {expected}"
+        else:
+            assert result == expected, f"Expected {expected}, got {result}"
+
+
+DATASET_SENSITIVE_VARIABLES = {
+    "movielens": {
+        "users": {
+            "expected_columns": ["user_id", "gender", "age", "occupation"],
+            "categorical_columns": ["gender", "occupation"],
+            "numeric_columns": ["age"],
+            "mappings": ["gender", "occupation"],
+            "decode_tests": [("gender", 0, "M"), ("gender", 1, "F")],
+        },
+        "items": {
+            "expected_columns": ["item_id", "primary_genre"],
+            "categorical_columns": ["primary_genre"],
+            "numeric_columns": [],
+            "mappings": ["primary_genre"],
+            "decode_tests": [],
+        },
+    },
+    "movielens1m": {
+        "users": {
+            "expected_columns": ["user_id", "gender", "age", "occupation"],
+            "categorical_columns": ["gender", "occupation"],
+            "numeric_columns": ["age"],
+            "mappings": ["gender", "occupation"],
+            "decode_tests": [("gender", 0, ["M", "F"]), ("gender", 1, ["M", "F"])],
+        },
+        "items": {
+            "expected_columns": ["item_id", "primary_genre"],
+            "categorical_columns": ["primary_genre"],
+            "numeric_columns": [],
+            "mappings": ["primary_genre"],
+            "decode_tests": [],
+        },
+    },
+    "amazonmusic": {
+        "users": {
+            "expected_columns": ["user_id", "activity_level", "rating_behavior", "helpfulness_level"],
+            "categorical_columns": ["activity_level", "rating_behavior", "helpfulness_level"],
+            "numeric_columns": [],
+            "mappings": ["activity_level", "rating_behavior", "helpfulness_level"],
+            "decode_tests": [],
+        },
+        "items": {
+            "expected_columns": ["item_id", "primary_genre"],
+            "categorical_columns": ["primary_genre"],
+            "numeric_columns": [],
+            "mappings": ["primary_genre"],
+            "decode_tests": [],
+        },
+    },
+    "anime": {
+        "users": {
+            "expected_columns": ["user_id", "activity_level", "rating_behavior", "engagement_level"],
+            "categorical_columns": ["activity_level", "rating_behavior", "engagement_level"],
+            "numeric_columns": [],
+            "mappings": ["activity_level", "rating_behavior", "engagement_level"],
+            "decode_tests": [],
+        },
+        "items": {
+            "expected_columns": ["item_id", "primary_genre", "anime_type", "episode_category"],
+            "categorical_columns": ["primary_genre", "anime_type", "episode_category"],
+            "numeric_columns": [],
+            "mappings": ["primary_genre", "anime_type", "episode_category"],
+            "decode_tests": [],
+        },
+    },
+    "bookcrossing": {
+        "users": {
+            "expected_columns": ["user_id", "country", "age", "activity_level", "rating_behavior"],
+            "categorical_columns": ["country", "activity_level", "rating_behavior"],
+            "numeric_columns": ["age"],
+            "mappings": ["country", "activity_level", "rating_behavior"],
+            "decode_tests": [],
+        },
+        "items": {
+            "expected_columns": ["item_id", "publication_year", "publisher_book_count"],
+            "categorical_columns": [],
+            "numeric_columns": ["publication_year", "publisher_book_count"],
+            "mappings": [],
+            "decode_tests": [],
+        },
+    },
+}

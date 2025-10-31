@@ -47,7 +47,7 @@ class TestLoadersIntegration:
     def test_create_loader_case_insensitive(self, dataset_name, loader_factory):
         loader1 = loader_factory.create_loader(dataset_name.upper())
         loader2 = loader_factory.create_loader(dataset_name.lower())
-        assert type(loader1) == type(loader2)
+        assert type(loader1) is type(loader2)
 
     def test_base_loader_invalid_path(self, movielens_loader_class):
         with pytest.raises(FileNotFoundError, match="Dataset path not found"):

@@ -138,7 +138,7 @@ class AnimeLoader(BaseDatasetLoader):
                 else:
                     try:
                         episodes = int(episodes)
-                    except:
+                    except ValueError:
                         episodes = 0
 
                 if episodes == 1:

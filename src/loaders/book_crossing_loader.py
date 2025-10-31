@@ -42,7 +42,7 @@ class BookCrossingLoader(BaseDatasetLoader):
             try:
                 rows = []
                 with open(users_file, "r", encoding="utf-8") as f:
-                    header = f.readline().strip().split("\t")
+                    _ = f.readline().strip().split("\t")
 
                     for line in f:
                         parts = line.strip().split("\t")
@@ -188,7 +188,7 @@ class BookCrossingLoader(BaseDatasetLoader):
                     try:
                         year_int = int(year)
                         publication_years.append(year_int)
-                    except:
+                    except ValueError:
                         publication_years.append(0)
 
                 publisher = row.get("Publisher", "")
