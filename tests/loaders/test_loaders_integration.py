@@ -42,7 +42,7 @@ class TestLoadersIntegration:
         assert ratings1 is ratings2
 
     def test_create_loader_invalid_dataset(self):
-        with pytest.raises(ValueError, match="Dataset 'invalid' não suportado"):
+        with pytest.raises(ValueError, match="Dataset 'invalid' not supported"):
             create_loader("invalid")
 
     @pytest.mark.parametrize("dataset_name", ["MOVIELENS", "movielens", "MovieLens"])

@@ -92,7 +92,7 @@ class TestSensitiveVariables:
             assert "occupation" in users.columns
 
             assert users["gender"].dtype in ["int32", "int64"]
-            assert users["age"].dtype in ["int32", "int64"]  # Idade como numérica
+            assert users["age"].dtype in ["int32", "int64"]
             assert users["occupation"].dtype in ["int32", "int64"]
 
             user_mappings = loader.get_user_mappings()

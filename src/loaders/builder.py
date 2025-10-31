@@ -19,7 +19,7 @@ def create_loader(dataset_name: str, base_path: str = "src/datasets/extracted") 
 
     dataset_name = dataset_name.lower()
     if dataset_name not in loaders:
-        raise ValueError(f"Dataset '{dataset_name}' não suportado. Opções: {list(loaders.keys())}")
+        raise ValueError(f"Dataset '{dataset_name}' not supported. Options: {list(loaders.keys())}")
 
     path_mapping = {
         "amazonmusic": "AmazonMusic",

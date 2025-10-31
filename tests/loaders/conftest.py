@@ -38,10 +38,8 @@ def temp_dir() -> Generator[Path, None, None]:
     ]
 )
 def loader_info(request):
-    """Fixture que fornece informações sobre cada loader (nome, classe, arquivo principal)."""
     dataset_name, class_name, main_file = request.param
 
-    # Importar a classe dinamicamente
     if class_name == "MovieLensLoader":
         from src.loaders.movielens_loader import MovieLensLoader
 
@@ -97,24 +95,20 @@ def minimal_dataset_files(temp_dir, loader_info):
     elif loader_info["dataset_name"] == "anime":
         main_file.write_text("User_ID\tAnime_ID\tFeedback\n1\t1\t8.0\n2\t2\t7.0\n")
 
-        # Criar arquivo de histórico para Anime
         history_file = temp_dir / "anime_history.dat"
         history_file.write_text("User_ID\tAnime_ID\tFeedback\n1\t1\t1\n2\t2\t1\n")
 
-        # Criar arquivo de info para Anime
         info_file = temp_dir / "anime_info.dat"
         info_file.write_text("anime_ids\tgenre\ttype\tepisodes\n1\tAction\tTV\t12\n2\tComedy\tMovie\t1\n")
 
     elif loader_info["dataset_name"] == "bookcrossing":
         main_file.write_text("user\titem\trating\n1\t1\t8.0\n2\t2\t7.0\n")
 
-        # Criar arquivo de usuários para BookCrossing
         users_file = temp_dir / "users_info.dat"
         users_file.write_text(
             "User-ID\tLocation\tAge\n1\tsan francisco, california, usa\t25\n2\tnew york, new york, usa\t30\n"
         )
 
-        # Criar arquivo de itens para BookCrossing
         items_file = temp_dir / "items_info.dat"
         items_file.write_text(
             "Book_ID\tISBN\tBook-Title\tBook-Author\tYear-Of-Publication\tPublisher\tImage-URL-S\tImage-URL-M\tImage-URL-L\n1\t123456789\tTest Book 1\tTest Author 1\t2000\tTest Publisher\turl1\turl2\turl3\n2\t987654321\tTest Book 2\tTest Author 2\t2001\tTest Publisher\turl1\turl2\turl3\n"
