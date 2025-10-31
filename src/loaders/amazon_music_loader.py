@@ -63,25 +63,32 @@ class AmazonMusicLoader(BaseDatasetLoader):
     def _load_items(self) -> pd.DataFrame:
         csv_file = self.dataset_path / "amazon_music_metadata.csv"
 
-        if not csv_file.exists():
-            if self._ratings_df is None:
-                self._ratings_df = self._load_ratings()
+        if self._ratings_df is None:
+            self._ratings_df = self._load_ratings()
 
-            items_data = []
-            for _, row in (
-                self._ratings_df.groupby("item_id").agg({"rating": ["count", "mean"]}).reset_index().iterrows()
-            ):
-                items_data.append(
-                    {
-                        "item_id": row["item_id"],
-                        "total_ratings": row[("rating", "count")],
-                        "avg_rating": row[("rating", "mean")],
-                    }
-                )
+        items_from_ratings = (
+            self._ratings_df.groupby("item_id").agg({"rating": ["count", "mean"], "user_id": "nunique"}).reset_index()
+        )
 
-            return pd.DataFrame(items_data)
+        items_data = []
+        for _, row in items_from_ratings.iterrows():
+            item_data = {
+                "item_id": row["item_id"],
+                "total_ratings": row[("rating", "count")],
+                "avg_rating": row[("rating", "mean")],
+                "unique_users": row[("user_id", "nunique")],
+            }
+            items_data.append(item_data)
 
-        try:
-            return pd.read_csv(csv_file)
-        except Exception:
-            return pd.DataFrame()
+        items_df = pd.DataFrame(items_data)
+
+        if csv_file.exists():
+            try:
+                metadata_df = pd.read_csv(csv_file)
+                if "asin" in metadata_df.columns:
+                    metadata_df = metadata_df.rename(columns={"asin": "item_id"})
+                items_df = items_df.merge(metadata_df, on="item_id", how="left")
+            except Exception:
+                pass
+
+        return items_df
