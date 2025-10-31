@@ -16,7 +16,7 @@ class TestFairnessIntegration:
             },
         }
 
-        pipeline = PipelineBuilder.from_dict(config)
+        pipeline = PipelineBuilder.from_dict(config, verbose=False)
         result = pipeline.run()
 
         assert "fairness_results" in result
@@ -62,7 +62,7 @@ class TestFairnessIntegration:
             },
         }
 
-        pipeline = PipelineBuilder.from_dict(config)
+        pipeline = PipelineBuilder.from_dict(config, verbose=False)
         result = pipeline.run()
 
         fairness_results = result["fairness_results"]
@@ -87,7 +87,7 @@ class TestFairnessIntegration:
             },
         }
 
-        pipeline = PipelineBuilder.from_dict(config)
+        pipeline = PipelineBuilder.from_dict(config, verbose=False)
         result = pipeline.run()
 
         fairness_results = result["fairness_results"]
@@ -113,7 +113,7 @@ class TestFairnessIntegration:
             },
         }
 
-        pipeline = PipelineBuilder.from_dict(config)
+        pipeline = PipelineBuilder.from_dict(config, verbose=False)
         result = pipeline.run()
 
         gender_fairness = result["fairness_results"]["baseline"]["aggregated"]["user_fairness"]["gender"]

@@ -1,4 +1,5 @@
 import json
+import time
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -12,6 +13,7 @@ from src.stages.base_stage import BaseStage
 
 class TrainingStage(BaseStage):
     def execute(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        logger = context.get("logger")
         ratings_df = context["ratings_df"]
         training_config = self.config.get("training", {})
         output_config = self.config.get("output", {})
@@ -24,6 +26,10 @@ class TrainingStage(BaseStage):
         models_config = training_config.get("models", [])
         validation_config = training_config.get("validation", {})
 
+        if logger:
+            logger.info(f"Training {len(models_config)} model(s)")
+            logger.info(f"Validation type: {validation_config.get('type', 'simple')}")
+
         all_predictions = []
         training_results = {}
 
@@ -31,17 +37,28 @@ class TrainingStage(BaseStage):
             model_name = model_config["name"]
             model_params = model_config.get("params", {})
 
+            if logger:
+                logger.info(f"Training model: {model_name}")
+
             model = ModelFactory.create_model(model_name, **model_params)
 
+            start_time = time.time()
+            
             if validation_config.get("type") == "cross_validate":
-                predictions, results = self._cross_validate(model, dataset, validation_config, model_name)
+                predictions, results = self._cross_validate(model, dataset, validation_config, model_name, logger)
             elif validation_config.get("type") == "train_test_split":
-                predictions, results = self._train_test_split(model, dataset, validation_config, model_name)
+                predictions, results = self._train_test_split(model, dataset, validation_config, model_name, logger)
             else:
-                predictions, results = self._simple_train(model, dataset, model_name)
+                predictions, results = self._simple_train(model, dataset, model_name, logger)
+
+            training_time = time.time() - start_time
+            results["training_time"] = training_time
 
             all_predictions.extend(predictions)
             training_results[model_name] = results
+
+            if logger:
+                logger.info(f"Model {model_name} completed in {training_time:.2f}s")
 
         predictions_df = pd.DataFrame(all_predictions)
         context["predictions_df"] = predictions_df
@@ -54,10 +71,13 @@ class TrainingStage(BaseStage):
         return context
 
     def _cross_validate(
-        self, model, dataset, validation_config: Dict[str, Any], model_name: str
+        self, model, dataset, validation_config: Dict[str, Any], model_name: str, logger=None
     ) -> tuple[List[Dict], Dict]:
         cv = validation_config.get("cv", 5)
         metrics = validation_config.get("metrics", ["rmse", "mae"])
+
+        if logger:
+            logger.info(f"Running {cv}-fold cross-validation")
 
         cv_results = cross_validate(model.algorithm, dataset, measures=metrics, cv=cv, return_train_measures=True)
 
@@ -67,6 +87,8 @@ class TrainingStage(BaseStage):
 
         kf = KFold(n_splits=cv)
         for trainset, testset in kf.split(dataset):
+            fold_start = time.time()
+            
             model_instance = ModelFactory.create_model(model_name, **model.get_params())
             model_instance.fit(trainset)
             fold_predictions = model_instance.test(testset)
@@ -82,6 +104,11 @@ class TrainingStage(BaseStage):
                         "model_name": model_name,
                     }
                 )
+            
+            if logger:
+                fold_time = time.time() - fold_start
+                logger.info(f"  Fold {fold + 1}/{cv} completed in {fold_time:.2f}s")
+            
             fold += 1
 
         results = {
@@ -94,7 +121,7 @@ class TrainingStage(BaseStage):
         return predictions, results
 
     def _train_test_split(
-        self, model, dataset, validation_config: Dict[str, Any], model_name: str
+        self, model, dataset, validation_config: Dict[str, Any], model_name: str, logger=None
     ) -> tuple[List[Dict], Dict]:
         test_size = validation_config.get("test_size", 0.2)
         random_state = validation_config.get("random_state", 42)
@@ -130,7 +157,7 @@ class TrainingStage(BaseStage):
 
         return predictions, results
 
-    def _simple_train(self, model, dataset, model_name: str) -> tuple[List[Dict], Dict]:
+    def _simple_train(self, model, dataset, model_name: str, logger=None) -> tuple[List[Dict], Dict]:
         trainset = dataset.build_full_trainset()
         testset = trainset.build_testset()
 
