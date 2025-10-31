@@ -1,5 +1,4 @@
 import json
-from typing import Any, Dict
 
 import pandas as pd
 
@@ -14,7 +13,7 @@ class AmazonMusicLoader(BaseDatasetLoader):
 
     DEFAULT_RATING_SCALE = (1.0, 5.0)
 
-    def load_ratings(self) -> pd.DataFrame:
+    def _load_ratings(self) -> pd.DataFrame:
         json_file = self.dataset_path / "Digital_Music_5.json"
 
         if not json_file.exists():
@@ -34,42 +33,55 @@ class AmazonMusicLoader(BaseDatasetLoader):
                             "helpful": review.get("helpful", [0, 0]),
                         }
                     )
-                except (json.JSONDecodeError, KeyError) as e:
-                    print(f"Error processing line: {e}")
+                except (json.JSONDecodeError, KeyError):
                     continue
 
-        self.ratings_df = pd.DataFrame(ratings_data)
+        return pd.DataFrame(ratings_data)
 
-        return self.ratings_df
+    def _load_users(self) -> pd.DataFrame:
+        if self._ratings_df is None:
+            self._ratings_df = self._load_ratings()
 
-    def load_metadata(self) -> pd.DataFrame:
+        users_data = []
+        for _, row in (
+            self._ratings_df.groupby("user_id")
+            .agg({"rating": ["count", "mean"], "timestamp": "min"})
+            .reset_index()
+            .iterrows()
+        ):
+            users_data.append(
+                {
+                    "user_id": row["user_id"],
+                    "total_ratings": row[("rating", "count")],
+                    "avg_rating": row[("rating", "mean")],
+                    "first_review": row[("timestamp", "min")],
+                }
+            )
+
+        return pd.DataFrame(users_data)
+
+    def _load_items(self) -> pd.DataFrame:
         csv_file = self.dataset_path / "amazon_music_metadata.csv"
 
         if not csv_file.exists():
-            raise FileNotFoundError(f"Metadata file not found: {csv_file}")
+            if self._ratings_df is None:
+                self._ratings_df = self._load_ratings()
+
+            items_data = []
+            for _, row in (
+                self._ratings_df.groupby("item_id").agg({"rating": ["count", "mean"]}).reset_index().iterrows()
+            ):
+                items_data.append(
+                    {
+                        "item_id": row["item_id"],
+                        "total_ratings": row[("rating", "count")],
+                        "avg_rating": row[("rating", "mean")],
+                    }
+                )
+
+            return pd.DataFrame(items_data)
 
         try:
-            self.metadata_df = pd.read_csv(csv_file)
-        except Exception as e:
-            print(f"Error loading metadata: {e}")
-            self.metadata_df = pd.DataFrame()
-
-        return self.metadata_df
-
-    def get_dataset_info(self) -> Dict[str, Any]:
-        if self.ratings_df is None:
-            self.load_ratings()
-
-        basic_stats = self.get_basic_stats()
-
-        info = {
-            **basic_stats,
-            "dataset_name": "Amazon Music",
-            "dataset_type": "E-commerce Reviews",
-            "domain": "Digital Music",
-            "has_metadata": self.metadata_df is not None and not self.metadata_df.empty,
-            "rating_scale": (1.0, 5.0),
-            "data_format": "JSON + CSV",
-        }
-
-        return info
+            return pd.read_csv(csv_file)
+        except Exception:
+            return pd.DataFrame()

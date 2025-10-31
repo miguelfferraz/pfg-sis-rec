@@ -8,7 +8,7 @@ from src.loaders.movielens_1m_loader import MovieLens1MLoader
 from src.loaders.movielens_loader import MovieLensLoader
 
 
-def create_loader(dataset_name: str, base_path: str = "sis_rec_experiments/datasets/extracted") -> BaseDatasetLoader:
+def create_loader(dataset_name: str, base_path: str = "src/datasets/extracted") -> BaseDatasetLoader:
     loaders = {
         "amazonmusic": AmazonMusicLoader,
         "anime": AnimeLoader,

@@ -1,5 +1,3 @@
-from typing import Any, Dict, Optional
-
 import pandas as pd
 
 from src.loaders.base_loader import BaseDatasetLoader
@@ -13,83 +11,90 @@ class AnimeLoader(BaseDatasetLoader):
 
     DEFAULT_RATING_SCALE = (1.0, 10.0)
 
-    def __init__(self, dataset_path: str):
-        super().__init__(dataset_path)
-        self.history_df: Optional[pd.DataFrame] = None
-
-    def load_ratings(self) -> pd.DataFrame:
+    def _load_ratings(self) -> pd.DataFrame:
         ratings_file = self.dataset_path / "anime_ratings.dat"
 
         if not ratings_file.exists():
             raise FileNotFoundError(f"Rating file not found: {ratings_file}")
 
-        self.ratings_df = pd.read_csv(
+        ratings_df = pd.read_csv(
             ratings_file, sep="\t", header=0, dtype={"User_ID": "int32", "Anime_ID": "int32", "Feedback": "float32"}
         )
 
-        self.ratings_df = self.ratings_df.rename(
-            columns={"User_ID": "user_id", "Anime_ID": "item_id", "Feedback": "rating"}
+        return ratings_df.rename(columns={"User_ID": "user_id", "Anime_ID": "item_id", "Feedback": "rating"})
+
+    def _load_users(self) -> pd.DataFrame:
+        history_file = self.dataset_path / "anime_history.dat"
+
+        if self._ratings_df is None:
+            self._ratings_df = self._load_ratings()
+
+        users_from_ratings = (
+            self._ratings_df.groupby("user_id").agg({"rating": ["count", "mean"], "item_id": "nunique"}).reset_index()
         )
 
-        return self.ratings_df
+        users_data = []
+        for _, row in users_from_ratings.iterrows():
+            user_data = {
+                "user_id": row["user_id"],
+                "total_ratings": row[("rating", "count")],
+                "avg_rating": row[("rating", "mean")],
+                "unique_items_rated": row[("item_id", "nunique")],
+            }
+            users_data.append(user_data)
 
-    def load_metadata(self) -> pd.DataFrame:
+        users_df = pd.DataFrame(users_data)
+
+        if history_file.exists():
+            try:
+                history_df = pd.read_csv(
+                    history_file,
+                    sep="\t",
+                    header=0,
+                    dtype={"User_ID": "int32", "Anime_ID": "int32", "Feedback": "int8"},
+                )
+                history_df = history_df.rename(
+                    columns={"User_ID": "user_id", "Anime_ID": "item_id", "Feedback": "accessed"}
+                )
+
+                history_stats = (
+                    history_df.groupby("user_id").agg({"accessed": "sum", "item_id": "nunique"}).reset_index()
+                )
+                history_stats.columns = ["user_id", "total_accessed", "unique_items_accessed"]
+
+                users_df = users_df.merge(history_stats, on="user_id", how="left")
+            except Exception:
+                pass
+
+        return users_df
+
+    def _load_items(self) -> pd.DataFrame:
         info_file = self.dataset_path / "anime_info.dat"
+
+        if self._ratings_df is None:
+            self._ratings_df = self._load_ratings()
+
+        items_from_ratings = (
+            self._ratings_df.groupby("item_id").agg({"rating": ["count", "mean"], "user_id": "nunique"}).reset_index()
+        )
+
+        items_data = []
+        for _, row in items_from_ratings.iterrows():
+            item_data = {
+                "item_id": row["item_id"],
+                "total_ratings": row[("rating", "count")],
+                "avg_rating": row[("rating", "mean")],
+                "unique_users": row[("user_id", "nunique")],
+            }
+            items_data.append(item_data)
+
+        items_df = pd.DataFrame(items_data)
 
         if info_file.exists():
             try:
-                self.metadata_df = pd.read_csv(info_file, sep="\t")
-            except Exception as e:
-                print(f"Error loading metadata: {e}")
-                self.metadata_df = pd.DataFrame()
-        else:
-            self.metadata_df = pd.DataFrame()
+                metadata_df = pd.read_csv(info_file, sep="\t")
+                items_df = items_df.merge(metadata_df, on="item_id", how="left")
+            except Exception:
+                pass
 
-        return self.metadata_df
-
-    def load_history(self) -> pd.DataFrame:
-        history_file = self.dataset_path / "anime_history.dat"
-
-        if not history_file.exists():
-            raise FileNotFoundError(f"History file not found: {history_file}")
-
-        self.history_df = pd.read_csv(
-            history_file, sep="\t", header=0, dtype={"User_ID": "int32", "Anime_ID": "int32", "Feedback": "int8"}
-        )
-
-        self.history_df = self.history_df.rename(
-            columns={"User_ID": "user_id", "Anime_ID": "item_id", "Feedback": "accessed"}
-        )
-
-        return self.history_df
-
-    def get_dataset_info(self) -> Dict[str, Any]:
-        if self.ratings_df is None:
-            self.load_ratings()
-
-        if self.history_df is None:
-            self.load_history()
-
-        basic_stats = self.get_basic_stats()
-
-        history_stats = {}
-        if self.history_df is not None and not self.history_df.empty:
-            history_stats = {
-                "total_history_records": len(self.history_df),
-                "unique_users_history": self.history_df["user_id"].nunique(),
-                "unique_items_history": self.history_df["item_id"].nunique(),
-                "avg_items_per_user_history": len(self.history_df) / max(self.history_df["user_id"].nunique(), 1),
-            }
-
-        info = {
-            **basic_stats,
-            **history_stats,
-            "dataset_name": "Anime Recommendations",
-            "dataset_type": "Entertainment Ratings",
-            "domain": "Anime/Manga",
-            "has_metadata": self.metadata_df is not None and not self.metadata_df.empty,
-            "rating_scale": (1.0, 10.0),
-            "data_format": "DAT",
-        }
-
-        return info
+        return items_df
