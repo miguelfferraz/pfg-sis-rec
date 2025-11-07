@@ -1,0 +1,91 @@
+{
+    "dataset": {
+        "name": "anime"
+    },
+    "preprocessing": [
+        {
+            "type": "rating_scaler",
+            "params": {
+                "from_min": 1,
+                "from_max": 10,
+                "to_min": 1,
+                "to_max": 5
+            }
+        }
+    ],
+    "training": {
+        "models": [
+            {
+                "name": "baseline",
+                "params": {}
+            },
+            {
+                "name": "knn_basic",
+                "params": {
+                    "k": 40,
+                    "sim_options": {
+                        "name": "cosine",
+                        "user_based": true
+                    }
+                }
+            },
+            {
+                "name": "knn_baseline",
+                "params": {
+                    "k": 40,
+                    "sim_options": {
+                        "name": "pearson_baseline",
+                        "user_based": true
+                    }
+                }
+            },
+            {
+                "name": "svd",
+                "params": {
+                    "n_factors": 50,
+                    "n_epochs": 20,
+                    "lr_all": 0.005,
+                    "reg_all": 0.02
+                }
+            },
+            {
+                "name": "svdpp",
+                "params": {
+                    "n_factors": 20,
+                    "n_epochs": 10,
+                    "lr_all": 0.007,
+                    "reg_all": 0.02
+                }
+            }
+        ],
+        "validation": {
+            "type": "cross_validate",
+            "cv": 5,
+            "metrics": [
+                "rmse",
+                "mae",
+                "fcp"
+            ]
+        }
+    },
+    "fairness": {
+        "item_attributes": [
+            {
+                "name": "primary_genre",
+                "type": "categorical"
+            },
+            {
+                "name": "anime_type",
+                "type": "categorical"
+            },
+            {
+                "name": "episode_category",
+                "type": "categorical"
+            }
+        ],
+        "positive_threshold": 3.0
+    },
+    "output": {
+        "save_path": "results/anime"
+    }
+}

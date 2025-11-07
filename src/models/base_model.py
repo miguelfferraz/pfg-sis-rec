@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict
 
-from surprise import Dataset
-
 
 class BaseModel(ABC):
     def __init__(self, **params):
