@@ -1,10 +1,14 @@
 from typing import Dict, Type
 
-from .algorithms.advanced_matrix_factorization import NMFModel, SVDppModel
-from .algorithms.baseline_models import BaselineOnlyModel
-from .algorithms.knn_models import KNNBaselineModel, KNNBasicModel, KNNWithMeansModel, KNNWithZScoreModel
-from .algorithms.matrix_factorization import SVDModel
-from .base_model import BaseModel
+from src.models.base_model import BaseModel
+from src.models.baseline_model import BaselineOnlyModel
+from src.models.knn_baseline_model import KNNBaselineModel
+from src.models.knn_basic_model import KNNBasicModel
+from src.models.knn_with_means_model import KNNWithMeansModel
+from src.models.knn_with_z_score_model import KNNWithZScoreModel
+from src.models.nmf_model import NMFModel
+from src.models.svd_model import SVDModel
+from src.models.svd_pp_model import SVDppModel
 
 
 class ModelFactory:

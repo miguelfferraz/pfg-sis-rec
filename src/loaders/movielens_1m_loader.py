@@ -1,8 +1,6 @@
-from typing import Any, Dict
-
 import pandas as pd
 
-from sis_rec_experiments.loaders.base_loader import BaseDatasetLoader
+from src.loaders.base_loader import BaseDatasetLoader
 
 
 class MovieLens1MLoader(BaseDatasetLoader):
@@ -13,13 +11,13 @@ class MovieLens1MLoader(BaseDatasetLoader):
 
     DEFAULT_RATING_SCALE = (1.0, 5.0)
 
-    def load_ratings(self) -> pd.DataFrame:
+    def _load_ratings(self) -> pd.DataFrame:
         ratings_file = self.dataset_path / "ratings.dat"
 
         if not ratings_file.exists():
             raise FileNotFoundError(f"Rating file not found: {ratings_file}")
 
-        self.ratings_df = pd.read_csv(
+        return pd.read_csv(
             ratings_file,
             sep="::",
             header=None,
@@ -28,48 +26,25 @@ class MovieLens1MLoader(BaseDatasetLoader):
             engine="python",
         )
 
-        return self.ratings_df
-
-    def load_metadata(self) -> pd.DataFrame:
-        movies_file = self.dataset_path / "movies.dat"
-
-        if movies_file.exists():
-            try:
-                self.metadata_df = pd.read_csv(
-                    movies_file,
-                    sep="::",
-                    header=None,
-                    encoding="latin-1",
-                    on_bad_lines="skip",
-                    engine="python",
-                    names=["item_id", "title", "genres"],
-                )
-
-                if "genres" in self.metadata_df.columns:
-                    self.metadata_df["genres_list"] = self.metadata_df["genres"].str.split("|")
-
-            except Exception as e:
-                print(f"Error loading metadata: {e}")
-                self.metadata_df = pd.DataFrame()
-        else:
-            self.metadata_df = pd.DataFrame()
-
-        return self.metadata_df
-
-    def load_users(self) -> pd.DataFrame:
+    def _load_users(self) -> pd.DataFrame:
         users_file = self.dataset_path / "users.dat"
 
         if not users_file.exists():
-            print(f"Users file not found: {users_file}")
-            return pd.DataFrame()
+            return pd.DataFrame(columns=["user_id"])
 
         try:
-            users_df = pd.read_csv(
+            demographics_df = pd.read_csv(
                 users_file,
                 sep="::",
                 header=None,
                 names=["user_id", "gender", "age", "occupation", "zip_code"],
-                dtype={"user_id": "int32", "gender": "str", "age": "int32", "occupation": "int32", "zip_code": "str"},
+                dtype={
+                    "user_id": "int32",
+                    "gender": "str",
+                    "age": "int32",
+                    "occupation": "int32",
+                    "zip_code": "str",
+                },
                 engine="python",
             )
 
@@ -107,74 +82,73 @@ class MovieLens1MLoader(BaseDatasetLoader):
                 20: "writer",
             }
 
-            users_df["occupation_name"] = users_df["occupation"].map(occupation_map)
+            demographics_df["occupation_name"] = demographics_df["occupation"].map(occupation_map)
+
+            gender_encoded = self._create_categorical_mapping(demographics_df["gender"], "gender", self.user_mappings)
+            occupation_encoded = self._create_categorical_mapping(
+                demographics_df["occupation_name"], "occupation", self.user_mappings
+            )
+
+            users_df = pd.DataFrame(
+                {
+                    "user_id": demographics_df["user_id"],
+                    "gender": gender_encoded,
+                    "age": demographics_df["age"],
+                    "occupation": occupation_encoded,
+                }
+            )
 
             return users_df
 
-        except Exception as e:
-            print(f"Error loading users: {e}")
-            return pd.DataFrame()
+        except Exception:
+            return pd.DataFrame(columns=["user_id"])
 
-    def get_dataset_info(self) -> Dict[str, Any]:
-        if self.ratings_df is None:
-            self.load_ratings()
+    def _load_items(self) -> pd.DataFrame:
+        movies_file = self.dataset_path / "movies.dat"
 
-        basic_stats = self.get_basic_stats()
+        if not movies_file.exists():
+            return pd.DataFrame(columns=["item_id"])
 
-        if self.metadata_df is None:
-            self.load_metadata()
+        try:
+            metadata_df = pd.read_csv(
+                movies_file,
+                sep="::",
+                header=None,
+                encoding="latin-1",
+                on_bad_lines="skip",
+                engine="python",
+                names=["item_id", "title", "genres"],
+            )
 
-        info = {
-            **basic_stats,
-            "dataset_name": "MovieLens 1M",
-            "dataset_type": "Movie Ratings",
-            "domain": "Movies/Entertainment",
-            "has_metadata": self.metadata_df is not None and not self.metadata_df.empty,
-            "has_user_demographics": True,
-            "rating_scale": (1.0, 5.0),
-            "data_format": ":: (Double colon separated)",
-            "description": "MovieLens 1M dataset with 1,000,209 ratings from 6,040 users on 3,883 movies",
-            "collection_period": "2000",
-            "source": "GroupLens Research Project, University of Minnesota",
-        }
+            if "genres" not in metadata_df.columns:
+                return pd.DataFrame(columns=["item_id"])
 
-        return info
+            primary_genres = []
+            all_genres = set()
 
-    def get_genre_statistics(self) -> Dict[str, Any]:
-        if self.metadata_df is None or self.metadata_df.empty:
-            self.load_metadata()
+            for genres_str in metadata_df["genres"]:
+                if pd.isna(genres_str) or genres_str == "":
+                    primary_genres.append("unknown")
+                else:
+                    genre_list = genres_str.split("|")
+                    primary_genre = genre_list[0] if genre_list else "unknown"
+                    primary_genres.append(primary_genre)
+                    all_genres.update(genre_list)
 
-        if self.metadata_df.empty or "genres_list" not in self.metadata_df.columns:
-            return {}
+            unique_genres = sorted(list(all_genres))
+            if "unknown" not in unique_genres:
+                unique_genres.insert(0, "unknown")
 
-        all_genres = []
-        for genres_list in self.metadata_df["genres_list"]:
-            if isinstance(genres_list, list):
-                all_genres.extend(genres_list)
+            self.item_mappings["primary_genre"] = {genre: idx for idx, genre in enumerate(unique_genres)}
 
-        genre_counts = pd.Series(all_genres).value_counts()
+            items_df = pd.DataFrame(
+                {
+                    "item_id": metadata_df["item_id"],
+                    "primary_genre": [self.item_mappings["primary_genre"][genre] for genre in primary_genres],
+                }
+            )
 
-        return {
-            "total_unique_genres": len(genre_counts),
-            "most_common_genres": genre_counts.head(10).to_dict(),
-            "genre_distribution": genre_counts.to_dict(),
-        }
+            return items_df
 
-    def get_user_demographics_stats(self) -> Dict[str, Any]:
-        users_df = self.load_users()
-
-        if users_df.empty:
-            return {}
-
-        return {
-            "gender_distribution": users_df["gender"].value_counts().to_dict(),
-            "age_statistics": {
-                "mean": float(users_df["age"].mean()),
-                "median": float(users_df["age"].median()),
-                "min": int(users_df["age"].min()),
-                "max": int(users_df["age"].max()),
-                "std": float(users_df["age"].std()),
-            },
-            "occupation_distribution": users_df["occupation_name"].value_counts().head(10).to_dict(),
-            "total_users": len(users_df),
-        }
+        except Exception:
+            return pd.DataFrame(columns=["item_id"])
