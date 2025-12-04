@@ -1,0 +1,112 @@
+{
+    "dataset": {
+        "name": "movielens1m"
+    },
+    "preprocessing": [
+        {
+            "type": "min_ratings_filter",
+            "params": {
+                "min_user_ratings": 5,
+                "min_item_ratings": 10
+            }
+        }
+    ],
+    "training": {
+        "models": [
+            {
+                "name": "baseline",
+                "params": {}
+            },
+            {
+                "name": "knn_basic",
+                "params": {
+                    "k": 20,
+                    "sim_options": {
+                        "name": "cosine",
+                        "user_based": true
+                    }
+                }
+            },
+            {
+                "name": "knn_baseline",
+                "params": {
+                    "k": 20,
+                    "sim_options": {
+                        "name": "pearson_baseline",
+                        "user_based": true
+                    }
+                }
+            },
+            {
+                "name": "svd",
+                "params": {
+                    "n_factors": 30,
+                    "n_epochs": 10,
+                    "lr_all": 0.005,
+                    "reg_all": 0.02
+                }
+            },
+            {
+                "name": "svdpp",
+                "params": {
+                    "n_factors": 15,
+                    "n_epochs": 5,
+                    "lr_all": 0.007,
+                    "reg_all": 0.02
+                }
+            }
+        ],
+        "validation": {
+            "type": "cross_validate",
+            "cv": 5,
+            "metrics": [
+                "rmse",
+                "mae",
+                "fcp"
+            ]
+        }
+    },
+    "fairness": {
+        "user_attributes": [
+            {
+                "name": "gender",
+                "type": "categorical"
+            },
+            {
+                "name": "age",
+                "type": "numeric",
+                "bins": [
+                    {
+                        "label": "young",
+                        "min": 0,
+                        "max": 24
+                    },
+                    {
+                        "label": "adult",
+                        "min": 25,
+                        "max": 49
+                    },
+                    {
+                        "label": "senior",
+                        "min": 50,
+                        "max": 100
+                    }
+                ]
+            },
+            {
+                "name": "occupation",
+                "type": "categorical"
+            }
+        ],
+        "item_attributes": [
+            {
+                "name": "primary_genre",
+                "type": "categorical"
+            }
+        ],
+        "positive_threshold": 4.0
+    },
+    "output": {
+        "save_path": "results/movielens_1m"
+    }
+}

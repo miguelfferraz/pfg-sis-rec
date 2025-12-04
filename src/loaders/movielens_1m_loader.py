@@ -73,6 +73,16 @@ class MovieLens1MLoader(BaseDatasetLoader):
                 engine="python",
             )
 
+            age_map = {
+                1: 17,
+                18: 21,
+                25: 29,
+                35: 39,
+                45: 47,
+                50: 52,
+                56: 60,
+            }
+
             occupation_map = {
                 0: "other",
                 1: "academic/educator",

@@ -3,3 +3,7 @@
 src/datasets/extracted/*
 src/models/results/*
 **/__pycache__/*
+**/.DS_Store
+exports/
+latex_tables/
+results/

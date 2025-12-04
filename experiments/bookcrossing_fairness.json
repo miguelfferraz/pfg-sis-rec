@@ -1,0 +1,173 @@
+{
+    "dataset": {
+        "name": "bookcrossing"
+    },
+    "preprocessing": [
+        {
+            "type": "rating_scaler",
+            "params": {
+                "from_min": 1,
+                "from_max": 10,
+                "to_min": 1,
+                "to_max": 5
+            }
+        }
+    ],
+    "training": {
+        "models": [
+            {
+                "name": "baseline",
+                "params": {}
+            },
+            {
+                "name": "knn_basic",
+                "params": {
+                    "k": 40,
+                    "sim_options": {
+                        "name": "cosine",
+                        "user_based": true
+                    }
+                }
+            },
+            {
+                "name": "knn_baseline",
+                "params": {
+                    "k": 40,
+                    "sim_options": {
+                        "name": "pearson_baseline",
+                        "user_based": true
+                    }
+                }
+            },
+            {
+                "name": "svd",
+                "params": {
+                    "n_factors": 50,
+                    "n_epochs": 20,
+                    "lr_all": 0.005,
+                    "reg_all": 0.02
+                }
+            },
+            {
+                "name": "svdpp",
+                "params": {
+                    "n_factors": 20,
+                    "n_epochs": 10,
+                    "lr_all": 0.007,
+                    "reg_all": 0.02
+                }
+            }
+        ],
+        "validation": {
+            "type": "cross_validate",
+            "cv": 5,
+            "metrics": [
+                "rmse",
+                "mae",
+                "fcp"
+            ]
+        }
+    },
+    "fairness": {
+        "user_attributes": [
+            {
+                "name": "country",
+                "type": "categorical"
+            },
+            {
+                "name": "age",
+                "type": "numeric",
+                "bins": [
+                    {
+                        "label": "young",
+                        "min": 0,
+                        "max": 25
+                    },
+                    {
+                        "label": "adult",
+                        "min": 26,
+                        "max": 60
+                    },
+                    {
+                        "label": "senior",
+                        "min": 61,
+                        "max": 100
+                    }
+                ]
+            }
+        ],
+        "item_attributes": [
+            {
+                "name": "publication_year",
+                "type": "numeric",
+                "bins": [
+                    {
+                        "label": "1920-1949",
+                        "min": 1920,
+                        "max": 1949
+                    },
+                    {
+                        "label": "1950-1969",
+                        "min": 1950,
+                        "max": 1969
+                    },
+                    {
+                        "label": "1970-1989",
+                        "min": 1970,
+                        "max": 1989
+                    },
+                    {
+                        "label": "1990-1999",
+                        "min": 1990,
+                        "max": 1999
+                    },
+                    {
+                        "label": "2000-2010",
+                        "min": 2000,
+                        "max": 2010
+                    }
+                ]
+            },
+            {
+                "name": "publisher_book_count",
+                "type": "numeric",
+                "bins": [
+                    {
+                        "label": "0-5",
+                        "min": 0,
+                        "max": 5
+                    },
+                    {
+                        "label": "6-20",
+                        "min": 6,
+                        "max": 20
+                    },
+                    {
+                        "label": "21-50",
+                        "min": 21,
+                        "max": 50
+                    },
+                    {
+                        "label": "51-99",
+                        "min": 51,
+                        "max": 99
+                    },
+                    {
+                        "label": "100-249",
+                        "min": 100,
+                        "max": 249
+                    },
+                    {
+                        "label": "250-499",
+                        "min": 250,
+                        "max": 499
+                    }
+                ]
+            }
+        ],
+        "positive_threshold": 4.0
+    },
+    "output": {
+        "save_path": "results/bookcrossing"
+    }
+}
